@@ -2600,7 +2600,7 @@ static u8 CalcRegisteredItemsCount(void)
     u8 i, itemCount;
     for (i = 0; i<REGISTERED_ITEMS_MAX; i++)
     {
-        if (gSaveBlock1Ptr->registeredItemL[0] != ITEM_NONE)
+        if (gSaveBlock1Ptr->registeredItemL[i] != ITEM_NONE)
         {
             itemCount++;
         }
@@ -2624,7 +2624,7 @@ static void RegisteredItemsMenuBuildListMenuTemplate(void)
 
     gMultiuseListMenuTemplate = sRegisteredItemsMenuListTemplate;
     gMultiuseListMenuTemplate.items = sListMenuItems;
-    gMultiuseListMenuTemplate.totalItems = 4;
+    gMultiuseListMenuTemplate.totalItems = sRegisteredItemsCount;
     gMultiuseListMenuTemplate.maxShowed = 3;
 }
 
@@ -2668,7 +2668,7 @@ void ShowRegisteredItemsMenu(void)
 
 static void RegisteredItemsMenuFreeMemory(void)
 {
-    // Free(sShopData);
+    sRegisteredItemsCount = 0;
     Free(sListMenuItems);
     Free(sItemNames);
     FreeAllWindowBuffers();
