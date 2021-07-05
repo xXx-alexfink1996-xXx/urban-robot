@@ -990,6 +990,7 @@ struct SaveBlock1
     /*0x3D70*/ struct WaldaPhrase waldaPhrase;
     // sizeof: 0x3D88
                 u16 registeredItemL[REGISTERED_ITEMS_MAX];
+                u8 registeredItemLCount;
 };
 
 extern struct SaveBlock1* gSaveBlock1Ptr;

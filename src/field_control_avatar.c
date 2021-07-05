@@ -190,7 +190,7 @@ int ProcessPlayerFieldInput(struct FieldInput *input)
     }
     if (input->pressedSelectButton && UseRegisteredKeyItemOnField(0) == TRUE)
         return TRUE;
-    else if (input->pressedLButton )//&& UseRegisteredKeyItemOnField(1) == TRUE)
+    else if (input->pressedLButton && (gSaveBlock1Ptr->registeredItemLCount != 0)) //&& UseRegisteredKeyItemOnField(1) == TRUE)
     {
         ShowRegisteredItemsMenu();
         return TRUE;

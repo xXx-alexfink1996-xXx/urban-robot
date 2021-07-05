@@ -19,6 +19,7 @@
 #include "gpu_regs.h"
 #include "international_string_util.h"
 #include "item.h"
+#include "item_icon.h"
 #include "item_menu_icons.h"
 #include "item_use.h"
 #include "lilycove_lady.h"
@@ -527,7 +528,7 @@ static EWRAM_DATA struct TempWallyStruct *sTempWallyBag = 0;
 static EWRAM_DATA bool8 sRegisterSubMenu = FALSE;
 static EWRAM_DATA struct ListMenuItem *sListMenuItems = NULL;
 static EWRAM_DATA u8 (*sItemNames)[16] = {0};
-static EWRAM_DATA u8 sRegisteredItemsCount = 0;
+static EWRAM_DATA u8 sRegisteredItemsMenuIcon = 0xFF;
 
 extern u8 *const gPocketNamesStringsTable[];
 extern u8* gReturnToXStringsTable[];
@@ -2550,6 +2551,44 @@ void PrintTMHMMoveData(u16 itemId)
 
 
 //menu code
+#define TAG_ITEM_ICON_BASE_REG 2110
+static void RegisteredItemsMenuAddItemIcon(u16 item)
+{
+    u8 spriteId = sRegisteredItemsMenuIcon;
+    if (spriteId != 0xFF)
+        return;
+
+    spriteId = AddItemIconSprite(TAG_ITEM_ICON_BASE_REG, TAG_ITEM_ICON_BASE_REG, item);
+    if (spriteId != MAX_SPRITES)
+    {
+        gSprites[spriteId].pos2.x = 32;
+        gSprites[spriteId].pos2.y = 132;
+        gSprites[spriteId].oam.priority = 0;
+    }
+    sRegisteredItemsMenuIcon = spriteId;
+}
+static void RegisteredItemsMenuRemoveItemIcon(void)
+{
+    u8 spriteId = sRegisteredItemsMenuIcon;
+    if (spriteId == 0xFF)
+        return;
+
+    FreeSpriteTilesByTag(TAG_ITEM_ICON_BASE_REG);
+    FreeSpritePaletteByTag(TAG_ITEM_ICON_BASE_REG);
+    DestroySprite(&gSprites[spriteId]);
+    sRegisteredItemsMenuIcon = 0xFF;
+}
+static void RegisteredItemsMenuShowItemIcon(s32 item, bool8 onInit, struct ListMenu *list)
+{
+    if (onInit != TRUE)
+        PlaySE(SE_SELECT);
+
+    RegisteredItemsMenuRemoveItemIcon();
+
+    RegisteredItemsMenuAddItemIcon(item);
+
+    FillWindowPixelBuffer(2, PIXEL_FILL(0));
+}
 static const struct ListMenuTemplate sMultichoiceListTemplate =
 {
     .header_X = 0,
@@ -2568,14 +2607,14 @@ static const struct ListMenuTemplate sMultichoiceListTemplate =
 static const struct ListMenuTemplate sRegisteredItemsMenuListTemplate =
 {
     // .items = NULL,
-    // .moveCursorFunc = BuyMenuPrintItemDescriptionAndShowItemIcon,
+    .moveCursorFunc = RegisteredItemsMenuShowItemIcon,
     // .itemPrintFunc = BuyMenuPrintPriceInList,
     .totalItems = 0,
     .maxShowed = 0,
     .windowId = 1,
     .header_X = 0,
-    .item_X = 8,
-    .cursor_X = 0,
+    .item_X = 48,
+    .cursor_X = 40,
     .upText_Y = 1,
     .cursorPal = 2,
     .fillValue = 1,
@@ -2595,7 +2634,7 @@ static void RegisteredItemsMenuSetListEntry(struct ListMenuItem *menuItem, u16 i
     menuItem->id = item;
 }
 
-static u8 CalcRegisteredItemsCount(void)
+static bool8 CalcRegisteredItemsCount(void)
 {
     u8 i, itemCount;
     for (i = 0; i<REGISTERED_ITEMS_MAX; i++)
@@ -2605,34 +2644,25 @@ static u8 CalcRegisteredItemsCount(void)
             itemCount++;
         }
     }
-    sRegisteredItemsCount = itemCount;
-    return sRegisteredItemsCount;
+    return TRUE;
 }
 
 static void RegisteredItemsMenuBuildListMenuTemplate(void)
 {
     u8 i;
+    u8 itemCount = gSaveBlock1Ptr->registeredItemLCount;
     
-    sListMenuItems = Alloc((sRegisteredItemsCount) * sizeof(*sListMenuItems));
-    sItemNames = Alloc((sRegisteredItemsCount) * sizeof(*sItemNames));
-    for (i = 0; i < sRegisteredItemsCount; i++)
+    sListMenuItems = Alloc((itemCount) * sizeof(*sListMenuItems));
+    sItemNames = Alloc((itemCount) * sizeof(*sItemNames));
+    for (i = 0; i < itemCount; i++)
         RegisteredItemsMenuSetListEntry(&sListMenuItems[i], gSaveBlock1Ptr->registeredItemL[i], sItemNames[i]);
-
-    // StringCopy(sItemNames[i], gText_Cancel2);
-    // sListMenuItems[i].name = sItemNames[i];
-    // sListMenuItems[i].id = LIST_CANCEL;
 
     gMultiuseListMenuTemplate = sRegisteredItemsMenuListTemplate;
     gMultiuseListMenuTemplate.items = sListMenuItems;
-    gMultiuseListMenuTemplate.totalItems = sRegisteredItemsCount;
+    gMultiuseListMenuTemplate.totalItems = itemCount;
     gMultiuseListMenuTemplate.maxShowed = 3;
 }
 
-// 0x8004 = set id
-// 0x8005 = window X
-// 0x8006 = window y
-// 0x8007 = showed at once
-// 0x8008 = Allow B press
 void ShowRegisteredItemsMenu(void)
 {
     struct WindowTemplate template;
@@ -2640,13 +2670,9 @@ void ShowRegisteredItemsMenu(void)
     u8 Width = 28;
     u8 setId = 0;
     u8 Left = 1;
-    u8 Top = 140;
+    u8 Top = 13;
     u8 maxShowed = 3;
     u8 Height = maxShowed*2;
-
-
-    if (CalcRegisteredItemsCount() == 0)
-        return;
 
     template = CreateWindowTemplate(0, Left, Top, Width, Height, 0xF, 0x64);
     windowId = AddWindow(&template);
@@ -2654,11 +2680,9 @@ void ShowRegisteredItemsMenu(void)
 
     CopyWindowToVram(windowId, 3);
 
-    // gMultiuseListMenuTemplate = sMultichoiceListTemplate;
+    sRegisteredItemsMenuIcon = 0xFF;
+
     gMultiuseListMenuTemplate.windowId = windowId;
-    // gMultiuseListMenuTemplate.items = sScrollingSets[setId].set;
-    // gMultiuseListMenuTemplate.totalItems = sScrollingSets[setId].count;
-    // gMultiuseListMenuTemplate.maxShowed = maxShowed;
     RegisteredItemsMenuBuildListMenuTemplate();
 
     taskId = CreateTask(Task_ScrollingMultichoiceInput, 0);
@@ -2668,7 +2692,6 @@ void ShowRegisteredItemsMenu(void)
 
 static void RegisteredItemsMenuFreeMemory(void)
 {
-    sRegisteredItemsCount = 0;
     Free(sListMenuItems);
     Free(sItemNames);
     FreeAllWindowBuffers();
@@ -2677,6 +2700,7 @@ static void RegisteredItemsMenuFreeMemory(void)
 static void Task_ScrollingMultichoiceInput(u8 taskId)
 {
     bool8 done = FALSE;
+    bool8 PressedB = FALSE;
     s32 input = ListMenu_ProcessInput(gTasks[taskId].data[0]);
 
     switch (input)
@@ -2685,24 +2709,26 @@ static void Task_ScrollingMultichoiceInput(u8 taskId)
     case LIST_NOTHING_CHOSEN:
         break;
     case LIST_CANCEL:
-        done = TRUE;
+        PressedB = TRUE;
         break;
     default:
-        gSpecialVar_Result = input;
+        gSpecialVar_Result = Register_GetItemListPosition(input)+2;
         done = TRUE;
         break;
     }
 
-    if (done)
+    if (done || PressedB)
     {
+        RegisteredItemsMenuRemoveItemIcon();
+        RegisteredItemsMenuFreeMemory();
         DestroyListMenuTask(gTasks[taskId].data[0], NULL, NULL);
         ClearStdWindowAndFrame(gTasks[taskId].data[2], TRUE);
         RemoveWindow(gTasks[taskId].data[2]);
-        RegisteredItemsMenuFreeMemory();
         EnableBothScriptContexts();
         DestroyTask(taskId);
     }
-
+    if (done)
+        UseRegisteredKeyItemOnField(gSpecialVar_Result);
 }
 
 
@@ -2738,7 +2764,10 @@ static void ResetRegisteredItem(u16 item)
     for (i = 0; i< REGISTERED_ITEMS_MAX; i++)
     {
         if (gSaveBlock1Ptr->registeredItemL[i] == item)
+        {
             gSaveBlock1Ptr->registeredItemL[i] = ITEM_NONE;
+            gSaveBlock1Ptr->registeredItemLCount--;
+        }
     }
 }
 
@@ -2815,6 +2844,7 @@ static void ItemMenu_RegisterL(u8 taskId)
     else
     {
         gSaveBlock1Ptr->registeredItemL[slot] = gSpecialVar_ItemId;
+        gSaveBlock1Ptr->registeredItemLCount++;
         gTasks[taskId].func = ItemMenu_FinishRegister;
     }
 }
