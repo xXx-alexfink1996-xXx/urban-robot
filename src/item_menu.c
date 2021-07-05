@@ -160,6 +160,9 @@ void BagMenu_CancelSell(u8 taskId);
 static void ItemMenu_RegisterSelect(u8 taskId);
 static void ItemMenu_RegisterL(u8 taskId);
 static void ItemMenu_Deselect(u8 taskId);
+static u8 Register_GetItemListPosition(u16 itemId);
+static bool8 Register_IsItemInList(u16 itemId);
+static void Task_ScrollingMultichoiceInput(u8 taskId);
 
 // .rodata
 
@@ -522,6 +525,9 @@ static EWRAM_DATA struct ListBuffer2 *sListBuffer2 = 0;
 EWRAM_DATA u16 gSpecialVar_ItemId = 0;
 static EWRAM_DATA struct TempWallyStruct *sTempWallyBag = 0;
 static EWRAM_DATA bool8 sRegisterSubMenu = FALSE;
+static EWRAM_DATA struct ListMenuItem *sListMenuItems = NULL;
+static EWRAM_DATA u8 (*sItemNames)[16] = {0};
+static EWRAM_DATA u8 sRegisteredItemsCount = 0;
 
 extern u8 *const gPocketNamesStringsTable[];
 extern u8* gReturnToXStringsTable[];
@@ -950,7 +956,7 @@ void BagMenu_ItemPrintCallback(u8 windowId, s32 itemIndex, u8 y)
             if (gSaveBlock1Ptr->registeredItemSelect && gSaveBlock1Ptr->registeredItemSelect == itemId)
                 BlitBitmapToWindow(windowId, sSelectButtonGfx, 96, y - 1, 24, 16);
             
-            if (gSaveBlock1Ptr->registeredItemL && gSaveBlock1Ptr->registeredItemL[0] == itemId)
+            if (Register_IsItemInList(itemId))
                 BlitBitmapToWindow(windowId, sLButtonGfx, 96, y - 1, 24, 16);
         }
     }
@@ -1583,7 +1589,7 @@ void OpenContextMenu(u8 unused)
                         
                         if (gSaveBlock1Ptr->registeredItemSelect == gSpecialVar_ItemId)
                             gBagMenu->contextMenuItemsBuffer[1] = ITEMMENUACTION_DESELECT;
-                        else if (gSaveBlock1Ptr->registeredItemL[0] == gSpecialVar_ItemId)
+                        else if (Register_IsItemInList(gSpecialVar_ItemId))
                             gBagMenu->contextMenuItemsBuffer[1] = ITEMMENUACTION_DESELECT;
                         
                         break;
@@ -2542,7 +2548,187 @@ void PrintTMHMMoveData(u16 itemId)
 }
 
 
+
+//menu code
+static const struct ListMenuTemplate sMultichoiceListTemplate =
+{
+    .header_X = 0,
+    .item_X = 8,
+    .cursor_X = 0,
+    .upText_Y = 1,
+    .cursorPal = 2,
+    .fillValue = 1,
+    .cursorShadowPal = 3,
+    .lettersSpacing = 1,
+    .itemVerticalPadding = 0,
+    .scrollMultiple = LIST_NO_MULTIPLE_SCROLL,
+    .fontId = 1,
+    .cursorKind = 0
+};
+static const struct ListMenuTemplate sRegisteredItemsMenuListTemplate =
+{
+    // .items = NULL,
+    // .moveCursorFunc = BuyMenuPrintItemDescriptionAndShowItemIcon,
+    // .itemPrintFunc = BuyMenuPrintPriceInList,
+    .totalItems = 0,
+    .maxShowed = 0,
+    .windowId = 1,
+    .header_X = 0,
+    .item_X = 8,
+    .cursor_X = 0,
+    .upText_Y = 1,
+    .cursorPal = 2,
+    .fillValue = 1,
+    .cursorShadowPal = 3,
+    .lettersSpacing = 1,
+    .itemVerticalPadding = 0,
+    .scrollMultiple = LIST_NO_MULTIPLE_SCROLL,
+    .fontId = 1,
+    .cursorKind = 0
+};
+
+static void RegisteredItemsMenuSetListEntry(struct ListMenuItem *menuItem, u16 item, u8 *name)
+{
+    CopyItemName(item, name);
+
+    menuItem->name = name;
+    menuItem->id = item;
+}
+
+static u8 CalcRegisteredItemsCount(void)
+{
+    u8 i, itemCount;
+    for (i = 0; i<REGISTERED_ITEMS_MAX; i++)
+    {
+        if (gSaveBlock1Ptr->registeredItemL[0] != ITEM_NONE)
+        {
+            itemCount++;
+        }
+    }
+    sRegisteredItemsCount = itemCount;
+    return sRegisteredItemsCount;
+}
+
+static void RegisteredItemsMenuBuildListMenuTemplate(void)
+{
+    u8 i;
+    
+    sListMenuItems = Alloc((sRegisteredItemsCount) * sizeof(*sListMenuItems));
+    sItemNames = Alloc((sRegisteredItemsCount) * sizeof(*sItemNames));
+    for (i = 0; i < sRegisteredItemsCount; i++)
+        RegisteredItemsMenuSetListEntry(&sListMenuItems[i], gSaveBlock1Ptr->registeredItemL[i], sItemNames[i]);
+
+    // StringCopy(sItemNames[i], gText_Cancel2);
+    // sListMenuItems[i].name = sItemNames[i];
+    // sListMenuItems[i].id = LIST_CANCEL;
+
+    gMultiuseListMenuTemplate = sRegisteredItemsMenuListTemplate;
+    gMultiuseListMenuTemplate.items = sListMenuItems;
+    gMultiuseListMenuTemplate.totalItems = 4;
+    gMultiuseListMenuTemplate.maxShowed = 3;
+}
+
+// 0x8004 = set id
+// 0x8005 = window X
+// 0x8006 = window y
+// 0x8007 = showed at once
+// 0x8008 = Allow B press
+void ShowRegisteredItemsMenu(void)
+{
+    struct WindowTemplate template;
+    u8 i, windowId, taskId;
+    u8 Width = 28;
+    u8 setId = 0;
+    u8 Left = 1;
+    u8 Top = 140;
+    u8 maxShowed = 3;
+    u8 Height = maxShowed*2;
+
+
+    if (CalcRegisteredItemsCount() == 0)
+        return;
+
+    template = CreateWindowTemplate(0, Left, Top, Width, Height, 0xF, 0x64);
+    windowId = AddWindow(&template);
+    SetStandardWindowBorderStyle(windowId, 0);
+
+    CopyWindowToVram(windowId, 3);
+
+    // gMultiuseListMenuTemplate = sMultichoiceListTemplate;
+    gMultiuseListMenuTemplate.windowId = windowId;
+    // gMultiuseListMenuTemplate.items = sScrollingSets[setId].set;
+    // gMultiuseListMenuTemplate.totalItems = sScrollingSets[setId].count;
+    // gMultiuseListMenuTemplate.maxShowed = maxShowed;
+    RegisteredItemsMenuBuildListMenuTemplate();
+
+    taskId = CreateTask(Task_ScrollingMultichoiceInput, 0);
+    gTasks[taskId].data[0] = ListMenuInit(&gMultiuseListMenuTemplate, 0, 0);
+    gTasks[taskId].data[2] = windowId;
+}
+
+static void RegisteredItemsMenuFreeMemory(void)
+{
+    // Free(sShopData);
+    Free(sListMenuItems);
+    Free(sItemNames);
+    FreeAllWindowBuffers();
+}
+
+static void Task_ScrollingMultichoiceInput(u8 taskId)
+{
+    bool8 done = FALSE;
+    s32 input = ListMenu_ProcessInput(gTasks[taskId].data[0]);
+
+    switch (input)
+    {
+    case LIST_HEADER:
+    case LIST_NOTHING_CHOSEN:
+        break;
+    case LIST_CANCEL:
+        done = TRUE;
+        break;
+    default:
+        gSpecialVar_Result = input;
+        done = TRUE;
+        break;
+    }
+
+    if (done)
+    {
+        DestroyListMenuTask(gTasks[taskId].data[0], NULL, NULL);
+        ClearStdWindowAndFrame(gTasks[taskId].data[2], TRUE);
+        RemoveWindow(gTasks[taskId].data[2]);
+        RegisteredItemsMenuFreeMemory();
+        EnableBothScriptContexts();
+        DestroyTask(taskId);
+    }
+
+}
+
+
 // New
+static bool8 Register_IsItemInList(u16 itemId)
+{
+    u8 i;
+    for (i = 0; i < 4; i++)
+    {
+        if (gSaveBlock1Ptr->registeredItemL[i] == itemId)
+            return TRUE;
+    }
+    return FALSE;
+}
+
+static u8 Register_GetItemListPosition(u16 itemId)
+{
+    u8 i;
+    for (i = 0; i < 4; i++)
+    {
+        if (gSaveBlock1Ptr->registeredItemL[i] == itemId)
+            return i;
+    }
+    return FALSE;
+}
+
 static void ResetRegisteredItem(u16 item)
 {
     u8 i;
