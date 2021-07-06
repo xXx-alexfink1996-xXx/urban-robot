@@ -2639,7 +2639,7 @@ static bool8 CalcRegisteredItemsCount(void)
     u8 i, itemCount;
     for (i = 0; i<REGISTERED_ITEMS_MAX; i++)
     {
-        if (gSaveBlock1Ptr->registeredItemL[i] != ITEM_NONE)
+        if (gSaveBlock1Ptr->registeredItemList[i] != ITEM_NONE)
         {
             itemCount++;
         }
@@ -2655,7 +2655,7 @@ static void RegisteredItemsMenuBuildListMenuTemplate(void)
     sListMenuItems = Alloc((itemCount) * sizeof(*sListMenuItems));
     sItemNames = Alloc((itemCount) * sizeof(*sItemNames));
     for (i = 0; i < itemCount; i++)
-        RegisteredItemsMenuSetListEntry(&sListMenuItems[i], gSaveBlock1Ptr->registeredItemL[i], sItemNames[i]);
+        RegisteredItemsMenuSetListEntry(&sListMenuItems[i], gSaveBlock1Ptr->registeredItemList[i], sItemNames[i]);
 
     gMultiuseListMenuTemplate = sRegisteredItemsMenuListTemplate;
     gMultiuseListMenuTemplate.items = sListMenuItems;
@@ -2686,7 +2686,7 @@ void ShowRegisteredItemsMenu(void)
     RegisteredItemsMenuBuildListMenuTemplate();
 
     taskId = CreateTask(Task_ScrollingMultichoiceInput, 0);
-    gTasks[taskId].data[0] = ListMenuInit(&gMultiuseListMenuTemplate, 0, 0);
+    gTasks[taskId].data[0] = ListMenuInit(&gMultiuseListMenuTemplate, 0, gSaveBlock1Ptr->registeredItemLastSelected);
     gTasks[taskId].data[2] = windowId;
 }
 
@@ -2702,6 +2702,7 @@ static void Task_ScrollingMultichoiceInput(u8 taskId)
     bool8 done = FALSE;
     bool8 PressedB = FALSE;
     s32 input = ListMenu_ProcessInput(gTasks[taskId].data[0]);
+    u8 pos;
 
     switch (input)
     {
@@ -2712,7 +2713,9 @@ static void Task_ScrollingMultichoiceInput(u8 taskId)
         PressedB = TRUE;
         break;
     default:
-        gSpecialVar_Result = Register_GetItemListPosition(input)+2;
+        pos = Register_GetItemListPosition(input);
+        gSaveBlock1Ptr->registeredItemLastSelected = pos; 
+        // gSpecialVar_Result = pos+2;
         done = TRUE;
         break;
     }
@@ -2728,17 +2731,43 @@ static void Task_ScrollingMultichoiceInput(u8 taskId)
         DestroyTask(taskId);
     }
     if (done)
-        UseRegisteredKeyItemOnField(gSpecialVar_Result);
+        UseRegisteredKeyItemOnField(pos+2);
 }
 
 
 // New
+static bool8 Register_SwapItemInArray(u8 pos1, u8 pos2)
+{
+    u16 itemId = gSaveBlock1Ptr->registeredItemList[pos1];
+
+    if (gSaveBlock1Ptr->registeredItemList[pos2] != ITEM_NONE)
+    {
+        gSaveBlock1Ptr->registeredItemList[pos1] = gSaveBlock1Ptr->registeredItemList[pos2];
+        gSaveBlock1Ptr->registeredItemList[pos2] = itemId;
+        return TRUE;
+    }
+    
+    return FALSE;
+}
+
+static bool8 Register_CleanItemArray(u8 start)
+{
+    u8 i;
+    
+    for (i = start; i < REGISTERED_ITEMS_MAX-1 ; i++)
+    {
+        if (!Register_SwapItemInArray(i, i+1))
+            return TRUE;
+    }
+    return TRUE;
+}
+
 static bool8 Register_IsItemInList(u16 itemId)
 {
     u8 i;
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < REGISTERED_ITEMS_MAX; i++)
     {
-        if (gSaveBlock1Ptr->registeredItemL[i] == itemId)
+        if (gSaveBlock1Ptr->registeredItemList[i] == itemId)
             return TRUE;
     }
     return FALSE;
@@ -2747,9 +2776,9 @@ static bool8 Register_IsItemInList(u16 itemId)
 static u8 Register_GetItemListPosition(u16 itemId)
 {
     u8 i;
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < REGISTERED_ITEMS_MAX; i++)
     {
-        if (gSaveBlock1Ptr->registeredItemL[i] == itemId)
+        if (gSaveBlock1Ptr->registeredItemList[i] == itemId)
             return i;
     }
     return FALSE;
@@ -2763,10 +2792,16 @@ static void ResetRegisteredItem(u16 item)
  
     for (i = 0; i< REGISTERED_ITEMS_MAX; i++)
     {
-        if (gSaveBlock1Ptr->registeredItemL[i] == item)
+        if (gSaveBlock1Ptr->registeredItemList[i] == item)
         {
-            gSaveBlock1Ptr->registeredItemL[i] = ITEM_NONE;
+            gSaveBlock1Ptr->registeredItemList[i] = ITEM_NONE;
             gSaveBlock1Ptr->registeredItemLCount--;
+            Register_CleanItemArray(i);
+            if (gSaveBlock1Ptr->registeredItemLastSelected > i)
+                gSaveBlock1Ptr->registeredItemLastSelected--;
+            else if (gSaveBlock1Ptr->registeredItemLastSelected == i)
+                gSaveBlock1Ptr->registeredItemLastSelected = 0;
+            return;
         }
     }
 }
@@ -2834,7 +2869,7 @@ static void ItemMenu_RegisterL(u8 taskId)
     //get first free spot, if available
     for (i = 0; i< REGISTERED_ITEMS_MAX; i++)
     {
-        if (gSaveBlock1Ptr->registeredItemL[i] == ITEM_NONE && slot == 0xFF)
+        if (gSaveBlock1Ptr->registeredItemList[i] == ITEM_NONE && slot == 0xFF)
             slot = i;
     }
 
@@ -2843,7 +2878,7 @@ static void ItemMenu_RegisterL(u8 taskId)
         gTasks[taskId].func = ItemMenu_FailRegister;
     else
     {
-        gSaveBlock1Ptr->registeredItemL[slot] = gSpecialVar_ItemId;
+        gSaveBlock1Ptr->registeredItemList[slot] = gSpecialVar_ItemId;
         gSaveBlock1Ptr->registeredItemLCount++;
         gTasks[taskId].func = ItemMenu_FinishRegister;
     }
@@ -2873,7 +2908,7 @@ bool8 UseRegisteredKeyItemOnField(u8 button)
     ChangeBgY_ScreenOff(0, 0, 0);
     
     if (button >= 2 && button <= REGISTERED_ITEMS_MAX+2)
-        registeredItem = gSaveBlock1Ptr->registeredItemL[button-2];
+        registeredItem = gSaveBlock1Ptr->registeredItemList[button-2];
     else
     {
         switch (button)
@@ -2883,7 +2918,7 @@ bool8 UseRegisteredKeyItemOnField(u8 button)
             break;
         case 1:
             //return TRUE;
-            registeredItem = gSaveBlock1Ptr->registeredItemL[0];
+            registeredItem = gSaveBlock1Ptr->registeredItemList[0];
             break;
         default:
             return FALSE;
@@ -2911,7 +2946,7 @@ bool8 UseRegisteredKeyItemOnField(u8 button)
                 gSaveBlock1Ptr->registeredItemSelect = ITEM_NONE;
                 break;
             case 1:
-                gSaveBlock1Ptr->registeredItemL[0] = ITEM_NONE;
+                gSaveBlock1Ptr->registeredItemList[0] = ITEM_NONE;
                 break;
             }
         }

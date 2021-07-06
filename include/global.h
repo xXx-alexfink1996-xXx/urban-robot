@@ -989,8 +989,9 @@ struct SaveBlock1
     /*0x3D64*/ struct SaveTrainerHill trainerHill;
     /*0x3D70*/ struct WaldaPhrase waldaPhrase;
     // sizeof: 0x3D88
-                u16 registeredItemL[REGISTERED_ITEMS_MAX];
-                u8 registeredItemLCount;
+                u16 registeredItemList[REGISTERED_ITEMS_MAX];
+                u8 registeredItemLCount:4; //max 16 items
+                u8 registeredItemLastSelected:4;
 };
 
 extern struct SaveBlock1* gSaveBlock1Ptr;
