@@ -2692,16 +2692,16 @@ void ShowRegisteredItemsMenu(void)
     //calculate offset from list top
     if (cursorStart > 2)
     {
-        if (cursorStart == gSaveBlock1Ptr->registeredItemLCount)
+        if (cursorStart == gSaveBlock1Ptr->registeredItemLCount - 1)
         {
             offset = cursorStart - 2;
             cursorStart = 2;
         }
-        // else
-        // {
-        //     offset = cursorStart - 1;
-        //     cursorStart = 1;
-        // }
+        else
+        {
+            offset = cursorStart - 1;
+            cursorStart = 1;
+        }
     }
 
     gMultiuseListMenuTemplate.windowId = windowId;
