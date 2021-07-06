@@ -105,7 +105,7 @@ void FieldGetPlayerInput(struct FieldInput *input, u16 newKeys, u16 heldKeys)
                 input->pressedAButton = TRUE;
             if (newKeys & B_BUTTON)
                 input->pressedBButton = TRUE;
-            if (newKeys & L_BUTTON && optionsButtonMode != 2)
+            if (newKeys & L_BUTTON && gSaveBlock2Ptr->optionsButtonMode != 2)
                 input->pressedListButton = TRUE;
             else if (newKeys & R_BUTTON)
                 input->pressedListButton = TRUE;
