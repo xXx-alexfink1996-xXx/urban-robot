@@ -2673,23 +2673,42 @@ void ShowRegisteredItemsMenu(void)
     u8 Top = 13;
     u8 maxShowed = 3;
     u8 Height = maxShowed*2;
+    u8 offset = 0;
+    u8 cursorStart = gSaveBlock1Ptr->registeredItemLastSelected;
 
     ScriptContext2_Enable();
 
-    HideMapNamePopUpWindow();
+    HideMapNamePopUpWindow(); //otherwise causes weird bugs if called at the same time
 
+    //create the window and loads the proper border
     template = CreateWindowTemplate(0, Left, Top, Width, Height, 0xF, 0x64);
     windowId = AddWindow(&template);
     LoadMessageBoxAndBorderGfx();
     SetStandardWindowBorderStyle(windowId, 0);
 
+    //safety reset
     sRegisteredItemsMenuIcon = 0xFF;
+
+    //calculate offset from list top
+    if (cursorStart > 2)
+    {
+        if (cursorStart == gSaveBlock1Ptr->registeredItemLCount)
+        {
+            offset = cursorStart - 2;
+            cursorStart = 2;
+        }
+        // else
+        // {
+        //     offset = cursorStart - 1;
+        //     cursorStart = 1;
+        // }
+    }
 
     gMultiuseListMenuTemplate.windowId = windowId;
     RegisteredItemsMenuBuildListMenuTemplate();
 
     taskId = CreateTask(Task_ScrollingMultichoiceInput, 0);
-    gTasks[taskId].data[0] = ListMenuInit(&gMultiuseListMenuTemplate, 0, gSaveBlock1Ptr->registeredItemLastSelected);
+    gTasks[taskId].data[0] = ListMenuInit(&gMultiuseListMenuTemplate, offset, cursorStart);
     // gTasks[taskId].data[1] = taskId;
     gTasks[taskId].data[2] = windowId;
     ScheduleBgCopyTilemapToVram(0);
@@ -2700,20 +2719,7 @@ static void RegisteredItemsMenuFreeMemory(void)
     Free(&sRegisteredItemsMenuIcon);
     Free(sListMenuItems);
     Free(sItemNames);
-    FreeAllWindowBuffers();
-}
-
-static void SetUpRegisteredItemsMenuTask(u8 pos)
-{
-    // switch (gMain.state)
-    // {
-    // case 0:
-    //     gMain.state++;
-    //     break;
-    // case 1:
-        UseRegisteredKeyItemOnField(pos+2);
-    //     break;
-    // }
+    // FreeAllWindowBuffers(); //somehow causes the weird follow up window error
 }
 
 static void CloseRegisteredItemsMenu(u8 taskId)
@@ -2749,7 +2755,6 @@ static void Task_ScrollingMultichoiceInput(u8 taskId)
     default:
         pos = Register_GetItemListPosition(input);
         gSaveBlock1Ptr->registeredItemLastSelected = pos; 
-        // SetUpRegisteredItemsMenuTask(pos);
         UseRegisteredKeyItemOnField(pos+2);
         CloseRegisteredItemsMenu(taskId);
         break;
@@ -2968,7 +2973,9 @@ bool8 UseRegisteredKeyItemOnField(u8 button)
                 gSaveBlock1Ptr->registeredItemSelect = ITEM_NONE;
                 break;
             case 1:
-                gSaveBlock1Ptr->registeredItemList[0] = ITEM_NONE;
+                break;
+            default:
+                gSaveBlock1Ptr->registeredItemList[button-2] = ITEM_NONE;
                 break;
             }
         }
