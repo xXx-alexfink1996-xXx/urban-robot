@@ -222,7 +222,7 @@ static const struct ListMenuTemplate sItemListMenu =
 };
 
 static const u8 sMenuText_Select[] = _("Select");
-static const u8 sMenuText_L[] = _("L Button");
+static const u8 sMenuText_L[] = _("List");
 static const struct MenuAction sItemMenuActions[] = {
     [ITEMMENUACTION_USE] =          {gMenuText_Use, ItemMenu_UseOutOfBattle},
     [ITEMMENUACTION_TOSS] =         {gMenuText_Toss, ItemMenu_Toss},
@@ -338,6 +338,7 @@ static const struct ScrollArrowsTemplate sBagScrollArrowsTemplate = {
 
 static const u8 sSelectButtonGfx[] = INCBIN_U8("graphics/interface/select_button.4bpp");
 static const u8 sLButtonGfx[] = INCBIN_U8("graphics/interface/L_button.4bpp");
+static const u8 sRButtonGfx[] = INCBIN_U8("graphics/interface/R_button.4bpp");
 
 static const u8 sFontColorTable[][3] = {
 // bgColor, textColor, shadowColor
@@ -764,7 +765,7 @@ void BagMenu_InitBGs(void)
     ResetVramOamAndBgCntRegs();
     memset(gBagMenu->tilemapBuffer, 0, 0x800);
     ResetBgsAndClearDma3BusyFlags(0);
-    InitBgsFromTemplates(0, sBgTemplates_ItemMenu, 3);
+    InitBgsFromTemplates(0, sBgTemplates_ItemMenu, ARRAY_COUNT(sBgTemplates_ItemMenu));
     SetBgTilemapBuffer(2, gBagMenu->tilemapBuffer);
     ResetAllBgsCoordinates();
     ScheduleBgCopyTilemapToVram(2);
@@ -959,7 +960,12 @@ void BagMenu_ItemPrintCallback(u8 windowId, s32 itemIndex, u8 y)
                 BlitBitmapToWindow(windowId, sSelectButtonGfx, 96, y - 1, 24, 16);
             
             if (Register_IsItemInList(itemId))
-                BlitBitmapToWindow(windowId, sLButtonGfx, 96, y - 1, 24, 16);
+            {
+                if (gSaveBlock2Ptr->optionsButtonMode != 2)
+                    BlitBitmapToWindow(windowId, sLButtonGfx, 96, y - 1, 24, 16);
+                else
+                    BlitBitmapToWindow(windowId, sRButtonGfx, 96, y - 1, 24, 16);
+            }
         }
     }
 }
@@ -1572,10 +1578,13 @@ void OpenContextMenu(u8 unused)
                         break;
                     case KEYITEMS_POCKET:
                         gBagMenu->contextMenuItemsPtr = gBagMenu->contextMenuItemsBuffer;
+                        
                         if (sRegisterSubMenu == FALSE)
                         {
                             gBagMenu->contextMenuNumItems = ARRAY_COUNT(sContextMenuItems_KeyItemsPocket);
                             memcpy(&gBagMenu->contextMenuItemsBuffer, &sContextMenuItems_KeyItemsPocket, sizeof(sContextMenuItems_KeyItemsPocket));
+                            
+                            // check replacing USE with WALK
                             if (gSpecialVar_ItemId == ITEM_MACH_BIKE || gSpecialVar_ItemId == ITEM_ACRO_BIKE)
                             {
                                 if (TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_MACH_BIKE | PLAYER_AVATAR_FLAG_ACRO_BIKE))
@@ -1733,7 +1742,7 @@ bool8 sub_81ACDFC(s8 a)
         return FALSE;
     if (a > gBagMenu->contextMenuNumItems)
         return FALSE;
-    if (gBagMenu->contextMenuItemsPtr[a] == 14)
+    if (gBagMenu->contextMenuItemsPtr[a] == ITEMMENUACTION_DUMMY)
         return FALSE;
     return TRUE;
 }
