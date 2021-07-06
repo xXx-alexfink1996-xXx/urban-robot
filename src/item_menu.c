@@ -1951,6 +1951,23 @@ void ItemMenu_Cancel(u8 taskId)
     set_callback3_to_bag(taskId);
 }
 
+static const u8 gText_TooManyRegistered[] = _("You already have too\nmany items registered!");
+static void ItemMenu_Cancel2(u8 taskId)
+{
+    s16* data = gTasks[taskId].data;
+
+    sRegisterSubMenu = FALSE;
+
+    BagMenu_RemoveSomeWindow();
+    BagMenu_PrintDescription(data[1]);
+    ScheduleBgCopyTilemapToVram(0);
+    ScheduleBgCopyTilemapToVram(1);
+    BagMenu_PrintCursor_(data[0], 0);
+    set_callback3_to_bag(taskId);
+
+    DisplayItemMessage(taskId, 1, gText_TooManyRegistered, sub_81AD350);
+}
+
 void ItemMenu_UseInBattle(u8 taskId)
 {
     if (ItemId_GetBattleFunc(gSpecialVar_ItemId))
@@ -2856,7 +2873,7 @@ static void ItemMenu_FailRegister(u8 taskId)
     LoadBagItemListBuffers(gBagPositionStruct.pocket);
     data[0] = ListMenuInit(&gMultiuseListMenuTemplate, *scrollPos, *cursorPos);
     ScheduleBgCopyTilemapToVram(0);
-    ItemMenu_Cancel(taskId);
+    ItemMenu_Cancel2(taskId);
 }
 
 void ItemMenu_Register(u8 taskId)
