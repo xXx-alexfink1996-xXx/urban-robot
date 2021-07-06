@@ -105,8 +105,10 @@ void FieldGetPlayerInput(struct FieldInput *input, u16 newKeys, u16 heldKeys)
                 input->pressedAButton = TRUE;
             if (newKeys & B_BUTTON)
                 input->pressedBButton = TRUE;
-            if (newKeys & L_BUTTON)
-                input->pressedLButton = TRUE;
+            if (newKeys & L_BUTTON && optionsButtonMode != 2)
+                input->pressedListButton = TRUE;
+            else if (newKeys & R_BUTTON)
+                input->pressedListButton = TRUE;
         }
 
         if (heldKeys & (DPAD_UP | DPAD_DOWN | DPAD_LEFT | DPAD_RIGHT))
@@ -190,7 +192,7 @@ int ProcessPlayerFieldInput(struct FieldInput *input)
     }
     if (input->pressedSelectButton && UseRegisteredKeyItemOnField(0) == TRUE)
         return TRUE;
-    else if (input->pressedLButton && (gSaveBlock1Ptr->registeredItemLCount != 0)) //&& UseRegisteredKeyItemOnField(1) == TRUE)
+    else if (input->pressedListButton && (gSaveBlock1Ptr->registeredItemLCount != 0)) //&& UseRegisteredKeyItemOnField(1) == TRUE)
     {
         ShowRegisteredItemsMenu();
         return TRUE;
