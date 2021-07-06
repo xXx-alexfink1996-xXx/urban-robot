@@ -39,6 +39,7 @@
 #include "pokemon_summary_screen.h"
 #include "scanline_effect.h"
 #include "script.h"
+#include "script_menu.h"
 #include "shop.h"
 #include "sound.h"
 #include "sprite.h"
@@ -2668,17 +2669,19 @@ void ShowRegisteredItemsMenu(void)
     struct WindowTemplate template;
     u8 i, windowId, taskId;
     u8 Width = 28;
-    u8 setId = 0;
     u8 Left = 1;
     u8 Top = 13;
     u8 maxShowed = 3;
     u8 Height = maxShowed*2;
 
+    ScriptContext2_Enable();
+
+    HideMapNamePopUpWindow();
+
     template = CreateWindowTemplate(0, Left, Top, Width, Height, 0xF, 0x64);
     windowId = AddWindow(&template);
+    LoadMessageBoxAndBorderGfx();
     SetStandardWindowBorderStyle(windowId, 0);
-
-    CopyWindowToVram(windowId, 3);
 
     sRegisteredItemsMenuIcon = 0xFF;
 
@@ -2687,20 +2690,51 @@ void ShowRegisteredItemsMenu(void)
 
     taskId = CreateTask(Task_ScrollingMultichoiceInput, 0);
     gTasks[taskId].data[0] = ListMenuInit(&gMultiuseListMenuTemplate, 0, gSaveBlock1Ptr->registeredItemLastSelected);
+    // gTasks[taskId].data[1] = taskId;
     gTasks[taskId].data[2] = windowId;
+    ScheduleBgCopyTilemapToVram(0);
 }
 
 static void RegisteredItemsMenuFreeMemory(void)
 {
+    Free(&sRegisteredItemsMenuIcon);
     Free(sListMenuItems);
     Free(sItemNames);
     FreeAllWindowBuffers();
 }
 
+static void SetUpRegisteredItemsMenuTask(u8 pos)
+{
+    // switch (gMain.state)
+    // {
+    // case 0:
+    //     gMain.state++;
+    //     break;
+    // case 1:
+        UseRegisteredKeyItemOnField(pos+2);
+    //     break;
+    // }
+}
+
+static void CloseRegisteredItemsMenu(u8 taskId)
+{
+    u8 windowId = gTasks[taskId].data[2];
+    RegisteredItemsMenuRemoveItemIcon();
+
+    DestroyListMenuTask(gTasks[taskId].data[0], NULL, NULL);
+    // ClearStdWindowAndFrame(gTasks[taskId].data[2], TRUE);
+    ClearStdWindowAndFrameToTransparent(windowId, TRUE);
+    FillWindowPixelBuffer(windowId, PIXEL_FILL(0));
+    CopyWindowToVram(windowId, 2);
+    RemoveWindow(windowId);
+
+    RegisteredItemsMenuFreeMemory();
+    DestroyTask(taskId);
+    EnableBothScriptContexts();
+}
+
 static void Task_ScrollingMultichoiceInput(u8 taskId)
 {
-    bool8 done = FALSE;
-    bool8 PressedB = FALSE;
     s32 input = ListMenu_ProcessInput(gTasks[taskId].data[0]);
     u8 pos;
 
@@ -2710,28 +2744,16 @@ static void Task_ScrollingMultichoiceInput(u8 taskId)
     case LIST_NOTHING_CHOSEN:
         break;
     case LIST_CANCEL:
-        PressedB = TRUE;
+        CloseRegisteredItemsMenu(taskId);
         break;
     default:
         pos = Register_GetItemListPosition(input);
         gSaveBlock1Ptr->registeredItemLastSelected = pos; 
-        // gSpecialVar_Result = pos+2;
-        done = TRUE;
+        // SetUpRegisteredItemsMenuTask(pos);
+        UseRegisteredKeyItemOnField(pos+2);
+        CloseRegisteredItemsMenu(taskId);
         break;
     }
-
-    if (done || PressedB)
-    {
-        RegisteredItemsMenuRemoveItemIcon();
-        RegisteredItemsMenuFreeMemory();
-        DestroyListMenuTask(gTasks[taskId].data[0], NULL, NULL);
-        ClearStdWindowAndFrame(gTasks[taskId].data[2], TRUE);
-        RemoveWindow(gTasks[taskId].data[2]);
-        EnableBothScriptContexts();
-        DestroyTask(taskId);
-    }
-    if (done)
-        UseRegisteredKeyItemOnField(pos+2);
 }
 
 
