@@ -2690,7 +2690,7 @@ void ShowRegisteredItemsMenu(void)
     sRegisteredItemsMenuIcon = 0xFF;
 
     //calculate offset from list top
-    if (cursorStart > 2)
+    if (cursorStart > 1 && gSaveBlock1Ptr->registeredItemLCount > 3)
     {
         if (cursorStart == gSaveBlock1Ptr->registeredItemLCount - 1)
         {
