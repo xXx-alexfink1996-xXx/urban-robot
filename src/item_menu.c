@@ -2839,29 +2839,32 @@ static u8 Register_GetItemListPosition(u16 itemId)
     }
     return FALSE;
 }
+*/
 
-static void ResetRegisteredItem(u16 item)
+static void ResetRegisteredItem(u16 itemId)
 {
     u8 i;
-    if (gSaveBlock1Ptr->registeredItemSelect == item)
+    if (gSaveBlock1Ptr->registeredItemSelect == itemId)
         gSaveBlock1Ptr->registeredItemSelect = ITEM_NONE;
- 
-    for (i = 0; i< REGISTERED_ITEMS_MAX; i++)
-    {
-        if (gSaveBlock1Ptr->registeredItemList[i] == item)
-        {
-            gSaveBlock1Ptr->registeredItemList[i] = ITEM_NONE;
-            gSaveBlock1Ptr->registeredItemLCount--;
-            Register_CleanItemArray(i);
-            if (gSaveBlock1Ptr->registeredItemLastSelected > i)
-                gSaveBlock1Ptr->registeredItemLastSelected--;
-            else if (gSaveBlock1Ptr->registeredItemLastSelected == i)
-                gSaveBlock1Ptr->registeredItemLastSelected = 0;
-            return;
-        }
-    }
+    else
+        TEST_RemoveRegisteredItem(itemId);
+
+    // for (i = 0; i< REGISTERED_ITEMS_MAX; i++)
+    // {
+    //     if (gSaveBlock1Ptr->registeredItemList[i] == item)
+    //     {
+    //         gSaveBlock1Ptr->registeredItemList[i] = ITEM_NONE;
+    //         gSaveBlock1Ptr->registeredItemLCount--;
+    //         Register_CleanItemArray(i);
+    //         if (gSaveBlock1Ptr->registeredItemLastSelected > i)
+    //             gSaveBlock1Ptr->registeredItemLastSelected--;
+    //         else if (gSaveBlock1Ptr->registeredItemLastSelected == i)
+    //             gSaveBlock1Ptr->registeredItemLastSelected = 0;
+    //         return;
+    //     }
+    // }
 }
-*/
+
 
 static void ItemMenu_FinishRegister(u8 taskId)
 {
@@ -2947,7 +2950,12 @@ static void ItemMenu_Deselect(u8 taskId)
     int listPosition = ListMenu_ProcessInput(data[0]);
     u16 itemId = BagGetItemIdByPocketPosition(gBagPositionStruct.pocket + 1, listPosition);
 
-    TEST_RemoveRegisteredItem(itemId);
+    ResetRegisteredItem(itemId);
+
+    // if (gSaveBlock1Ptr->registeredItemSelect == itemId)
+    //     gSaveBlock1Ptr->registeredItemSelect = ITEM_NONE;
+    // else
+    //     TEST_RemoveRegisteredItem(itemId);
 
     gTasks[taskId].func = ItemMenu_FinishRegister;
 }

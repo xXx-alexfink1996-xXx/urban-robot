@@ -567,9 +567,19 @@ u8 TEST_CountUsedRegisteredItemSlots(void)
     return usedSlots;
 }
 
+static void TEST_ChangeLastSelectedItemIndex(u8 index)
+{
+    if (gSaveBlock1Ptr->registeredItemLastSelected == index)
+        gSaveBlock1Ptr->registeredItemLastSelected = 0;
+    else if (index < gSaveBlock1Ptr->registeredItemLastSelected && index != 0)
+        gSaveBlock1Ptr->registeredItemLastSelected--;
+}
+
+
 static void TEST_RemoveRegisteredItemIndex(u8 index)
 {
     // UB: should use GetPCItemQuantity and SetPCItemQuantity functions
+    TEST_ChangeLastSelectedItemIndex(index);
     gSaveBlock1Ptr->registeredItems[index].itemId = ITEM_NONE;
     TEST_CompactRegisteredItems();
 }
@@ -582,6 +592,7 @@ void TEST_RemoveRegisteredItem(u16 itemId)
             if (gSaveBlock1Ptr->registeredItems[i].itemId == itemId)
             {
                 gSaveBlock1Ptr->registeredItems[i].itemId = ITEM_NONE;
+                TEST_ChangeLastSelectedItemIndex(i);
                 TEST_CompactRegisteredItems();
             }
         }
