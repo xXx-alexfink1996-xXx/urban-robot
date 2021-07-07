@@ -578,9 +578,8 @@ void TEST_RemoveRegisteredItem(u16 itemId)
         {
             if (gSaveBlock1Ptr->registeredItems[i].itemId == itemId)
             {
-                gSaveBlock1Ptr->registeredItems[i].itemId == ITEM_NONE;
+                gSaveBlock1Ptr->registeredItems[i].itemId = ITEM_NONE;
                 TEST_CompactRegisteredItems();
-                return;
             }
         }
 }
