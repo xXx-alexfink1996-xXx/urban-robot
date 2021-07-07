@@ -19,5 +19,6 @@ bool8 TEST_AddRegisteredItem(u16 itemId);
 bool8 TEST_CheckRegisteredHasItem(u16 itemId);
 bool8 TEST_AddRegisteredItem(u16 itemId);
 static s32 TEST_FindFreeRegisteredItemSlot(void);
+u8 TEST_GetRegisteredItemIndex(u16 itemId);
 
 #endif

@@ -235,6 +235,7 @@ static void TEST_ItemStorage_ProcessInput(u8 taskId)
             break;
         case LIST_CANCEL:
             PlaySE(SE_SELECT);
+            EnableBothScriptContexts();
             TEST_ItemStorage_CloseMenu(taskId);
             break;
         default:
@@ -255,8 +256,8 @@ static void TEST_ItemStorage_DoItemAction(u8 taskId)
     TEST_ItemStorage_RemoveScrollIndicator();
 
     gSaveBlock1Ptr->registeredItemLastSelected = pos;
-    UseRegisteredKeyItemOnField(pos+2);
     TEST_ItemStorage_CloseMenu(taskId);
+    UseRegisteredKeyItemOnField(pos+2);
 
     /*
     data[2] = 1;
@@ -298,7 +299,6 @@ static void TEST_ItemStorage_CloseMenu(u8 taskId) //TEST_ItemStorage_GoBackToPla
     TEST_FreeStructs();
     // gTasks[taskId].func = ItemStorage_GoBackToPlayerPCMenu_InitStorage;
     // SetMainCallback2(CB2_ReturnToField);
-    EnableBothScriptContexts();
     DestroyTask(taskId);
 }
 
@@ -466,6 +466,8 @@ static void TEST_ItemStorage_DoItemSwap(u8 taskId, bool8 a)
 {
     s16 *data;
     u16 b;
+    u8 lastSelected = gSaveBlock1Ptr->registeredItemLastSelected;
+    u16 lastSelectedItemId = gSaveBlock1Ptr->registeredItems[lastSelected].itemId;
 
     data = gTasks[taskId].data;
     b = (TESTItemPageInfo.itemsAbove + TESTItemPageInfo.cursorPos);
@@ -478,6 +480,7 @@ static void TEST_ItemStorage_DoItemSwap(u8 taskId, bool8 a)
             if (gTest->unk666 != b - 1)
             {
                 TEST_MoveItemSlotInList(gSaveBlock1Ptr->registeredItems, gTest->unk666, b);
+                gSaveBlock1Ptr->registeredItemLastSelected = TEST_GetRegisteredItemIndex(lastSelectedItemId);
                 TEST_ItemStorage_RefreshListMenu();
             }
         }
@@ -631,6 +634,18 @@ bool8 TEST_CheckRegisteredHasItem(u16 itemId)
             return TRUE;
     }
     return FALSE;
+}
+
+u8 TEST_GetRegisteredItemIndex(u16 itemId)
+{
+    u8 i;
+
+    for (i = 0; i < REGISTERED_ITEMS_MAX; i++)
+    {
+        if (gSaveBlock1Ptr->registeredItems[i].itemId == itemId)
+            return i;
+    }
+    return 0xFF;
 }
 
 static s32 TEST_FindFreeRegisteredItemSlot(void)
