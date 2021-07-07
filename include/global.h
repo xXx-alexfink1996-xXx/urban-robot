@@ -538,6 +538,11 @@ struct ItemSlot
     u16 quantity;
 };
 
+struct RegisteredItemSlot
+{
+    u16 itemId;
+};
+
 struct Pokeblock
 {
     u8 color;
@@ -992,6 +997,7 @@ struct SaveBlock1
                 u16 registeredItemList[REGISTERED_ITEMS_MAX];
                 u8 registeredItemLCount:4; //max 16 items
                 u8 registeredItemLastSelected:4;
+                struct RegisteredItemSlot registeredItems[REGISTERED_ITEMS_MAX];
 };
 
 extern struct SaveBlock1* gSaveBlock1Ptr;

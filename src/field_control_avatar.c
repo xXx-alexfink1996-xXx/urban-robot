@@ -20,6 +20,7 @@
 #include "metatile_behavior.h"
 #include "overworld.h"
 #include "pokemon.h"
+#include "registered_items_menu.h"
 #include "safari_zone.h"
 #include "script.h"
 #include "secret_base.h"
@@ -194,7 +195,7 @@ int ProcessPlayerFieldInput(struct FieldInput *input)
         return TRUE;
     else if (input->pressedListButton && (gSaveBlock1Ptr->registeredItemLCount != 0)) //&& UseRegisteredKeyItemOnField(1) == TRUE)
     {
-        ShowRegisteredItemsMenu();
+        TEST_PlayerPC();    //ShowRegisteredItemsMenu();
         return TRUE;
     }
 
