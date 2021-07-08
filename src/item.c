@@ -586,8 +586,8 @@ void CompactPCItems(void)
 
 void SwapRegisteredBike(void)
 {
-    u8 pos_ACRO = TEST_GetRegisteredItemIndex(ITEM_ACRO_BIKE);
-    u8 pos_MACH = TEST_GetRegisteredItemIndex(ITEM_MACH_BIKE);
+    u8 pos_ACRO = TxRegItemsMenu_GetRegisteredItemIndex(ITEM_ACRO_BIKE);
+    u8 pos_MACH = TxRegItemsMenu_GetRegisteredItemIndex(ITEM_MACH_BIKE);
     switch (gSaveBlock1Ptr->registeredItemSelect)
     {
     case ITEM_MACH_BIKE:

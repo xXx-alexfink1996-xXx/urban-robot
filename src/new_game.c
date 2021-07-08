@@ -188,7 +188,7 @@ void NewGameInitData(void)
     gSaveBlock1Ptr->registeredItemSelect = 0;
     ClearBag();
     NewGameInitPCItems();
-    TEST_RegisteredItemsMenuNewGame();
+    TxRegItemsMenu_RegisteredItemsMenuNewGame();
     ClearPokeblocks();
     ClearDecorationInventories();
     InitEasyChatPhrases();

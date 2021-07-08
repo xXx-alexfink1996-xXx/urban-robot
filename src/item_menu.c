@@ -960,7 +960,7 @@ void BagMenu_ItemPrintCallback(u8 windowId, s32 itemIndex, u8 y)
             if (gSaveBlock1Ptr->registeredItemSelect && gSaveBlock1Ptr->registeredItemSelect == itemId)
                 BlitBitmapToWindow(windowId, sSelectButtonGfx, 96, y - 1, 24, 16);
             
-            if (TEST_CheckRegisteredHasItem(itemId))
+            if (TxRegItemsMenu_CheckRegisteredHasItem(itemId))
             {
                 if (gSaveBlock2Ptr->optionsButtonMode != 2)
                     BlitBitmapToWindow(windowId, sLButtonGfx, 96, y - 1, 24, 16);
@@ -1601,7 +1601,7 @@ void OpenContextMenu(u8 unused)
                         
                         if (gSaveBlock1Ptr->registeredItemSelect == gSpecialVar_ItemId)
                             gBagMenu->contextMenuItemsBuffer[1] = ITEMMENUACTION_DESELECT;
-                        else if (TEST_CheckRegisteredHasItem(gSpecialVar_ItemId))
+                        else if (TxRegItemsMenu_CheckRegisteredHasItem(gSpecialVar_ItemId))
                             gBagMenu->contextMenuItemsBuffer[1] = ITEMMENUACTION_DESELECT;
                         
                         break;
@@ -2530,7 +2530,7 @@ static void ResetRegisteredItem(u16 itemId)
     if (gSaveBlock1Ptr->registeredItemSelect == itemId)
         gSaveBlock1Ptr->registeredItemSelect = ITEM_NONE;
     else
-        TEST_RemoveRegisteredItem(itemId);
+        TxRegItemsMenu_RemoveRegisteredItem(itemId);
 }
 
 static void ItemMenu_FinishRegister(u8 taskId)
@@ -2593,7 +2593,7 @@ static void ItemMenu_RegisterList(u8 taskId)
     u8 i;
     u8 slot = 0xFF;
 
-    if (TEST_AddRegisteredItem(gSpecialVar_ItemId))
+    if (TxRegItemsMenu_AddRegisteredItem(gSpecialVar_ItemId))
         gTasks[taskId].func = ItemMenu_FinishRegister;
     else
         gTasks[taskId].func = ItemMenu_FailRegister;
