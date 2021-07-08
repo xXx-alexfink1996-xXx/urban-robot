@@ -196,7 +196,7 @@ int ProcessPlayerFieldInput(struct FieldInput *input)
         return TRUE;
     else if (input->pressedListButton)
     {
-        TEST_PlayerPC();
+        TEST_OpenMenu();
         return TRUE;
     }
 

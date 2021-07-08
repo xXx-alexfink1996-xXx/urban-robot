@@ -12,7 +12,7 @@ struct TEST_ItemPageStruct
 };
 
 void TEST_RegisteredItemsMenuNewGame(void);
-void TEST_PlayerPC(void);
+void TEST_OpenMenu(void);
 u8 TEST_CountUsedRegisteredItemSlots(void);
 void TEST_RemoveRegisteredItem(u16 itemId);
 void TEST_CompactRegisteredItems(void);

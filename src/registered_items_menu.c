@@ -43,25 +43,25 @@ struct TEST_Struct
     u8 spriteIds[7];
 };
 
-static void TEST_ItemStorage_Withdraw(u8 taskId);
-static void TEST_ItemStorage_ClearAndInitData(u8 taskId);
-static void TEST_ItemStorage_ProcessWithdrawTossInput(u8 taskId);
-static void TEST_ItemStorage_ProcessInput(u8 taskId);
-static void TEST_ItemStorage_DoItemAction(u8 taskId);
-static void TEST_ItemStorage_CloseMenu(u8 taskId);
-static void TEST_ItemStorage_ItemSwapChoosePrompt(u8 taskId);
+static void TEST_InitMenuFunctions(u8 taskId);
+static void TEST_ClearAndInitData(u8 taskId);
+static void TEST_InitDataAndCreateListMenu(u8 taskId);
+static void TEST_ProcessInput(u8 taskId);
+static void TEST_DoItemAction(u8 taskId);
+static void TEST_CloseMenu(u8 taskId);
+static void TEST_ItemSwapChoosePrompt(u8 taskId);
 static void TEST_HandleSwapInput(u8 taskId);
 //helper
 static void TEST_CalcCursorPos(void);
 static void TEST_CalculateUsedSlots(void);
 static void TEST_AllocateStruct(void);
 static u8 TEST_InitWindow(void);
-static void TEST_ItemStorage_RefreshListMenu(void);
-static void TEST_ItemStorage_MoveCursor(s32 id, bool8 b, struct ListMenu *thisMenu);
-static void TEST_ItemStorage_PrintFunc(u8 windowId, s32 id, u8 yOffset);
+static void TEST_RefreshListMenu(void);
+static void TEST_MoveCursor(s32 id, bool8 b, struct ListMenu *thisMenu);
+static void TEST_PrintFunc(u8 windowId, s32 id, u8 yOffset);
 static void TEST_PrintItemIcon(u16 itemId);
-static void TEST_ItemStorage_DoItemSwap(u8 taskId, bool8 a);
-static void TEST_ItemStorage_StartScrollIndicator(void);
+static void TEST_DoItemSwap(u8 taskId, bool8 a);
+static void TEST_StartScrollIndicator(void);
 static void TEST_UpdateSwapLinePos(u8 y);
 static void TEST_CopyItemName(u8 *string, u16 itemId);
 static void TEST_PrintSwappingCursor(u8 y, u8 b, u8 speed);
@@ -72,7 +72,7 @@ static void TEST_RemoveRegisteredItemIndex(u8 index);
 //helper cleanup
 static void TEST_RemoveItemIcon(void);
 static void TEST_RemoveWinow(void);
-static void TEST_ItemStorage_RemoveScrollIndicator(void);
+static void TEST_RemoveScrollIndicator(void);
 static void TEST_FreeStructs(void);
 
 
@@ -92,8 +92,8 @@ static const struct WindowTemplate TEST_WindowTemplates[1] =
 static const struct ListMenuTemplate gTEST_List = //item storage list
 {
     .items = NULL,
-    .moveCursorFunc = TEST_ItemStorage_MoveCursor,
-    .itemPrintFunc = TEST_ItemStorage_PrintFunc,
+    .moveCursorFunc = TEST_MoveCursor,
+    .itemPrintFunc = TEST_PrintFunc,
     .totalItems = 0,
     .maxShowed = 0,
     .windowId = 0,
@@ -143,21 +143,21 @@ static EWRAM_DATA struct TEST_ItemPageStruct TESTItemPageInfo = {0, 0, 0, 0, {0,
 
 
 // functions
-void TEST_PlayerPC(void)
+void TEST_OpenMenu(void)
 {
     u8 taskId = CreateTask(TaskDummy, 0);
-    gTasks[taskId].func = TEST_ItemStorage_Withdraw;
+    gTasks[taskId].func = TEST_InitMenuFunctions;
 }
 
-static void TEST_ItemStorage_Withdraw(u8 taskId)
+static void TEST_InitMenuFunctions(u8 taskId)
 {
     s16 *data = gTasks[taskId].data;
 
     NUM_ITEMS = TEST_CountUsedRegisteredItemSlots();
-    TEST_ItemStorage_ClearAndInitData(taskId);
+    TEST_ClearAndInitData(taskId);
 }
 
-static void TEST_ItemStorage_ClearAndInitData(u8 taskId)
+static void TEST_ClearAndInitData(u8 taskId)
 {
     u16 *data = gTasks[taskId].data;
     u8 offset = 0;
@@ -187,10 +187,10 @@ static void TEST_ItemStorage_ClearAndInitData(u8 taskId)
     FreeAndReserveObjectSpritePalettes();
     LoadListMenuSwapLineGfx();
     CreateSwapLineSprites(gTest->spriteIds, 7);
-    gTasks[taskId].func = TEST_ItemStorage_ProcessWithdrawTossInput;
+    gTasks[taskId].func = TEST_InitDataAndCreateListMenu;
 }
 
-static void TEST_ItemStorage_ProcessWithdrawTossInput(u8 taskId)
+static void TEST_InitDataAndCreateListMenu(u8 taskId)
 {
     s16 *data;
     u32 i, x;
@@ -199,14 +199,14 @@ static void TEST_ItemStorage_ProcessWithdrawTossInput(u8 taskId)
     data = gTasks[taskId].data;
     TEST_CalculateUsedSlots(); //calculate used slots
     TEST_CalcCursorPos(); //calc cursor pos
-    TEST_ItemStorage_RefreshListMenu();
+    TEST_RefreshListMenu();
     data[5] = ListMenuInit(&gMultiuseListMenuTemplate, TESTItemPageInfo.itemsAbove, TESTItemPageInfo.cursorPos);
-    TEST_ItemStorage_StartScrollIndicator();
+    TEST_StartScrollIndicator();
     ScheduleBgCopyTilemapToVram(0);
-    gTasks[taskId].func = TEST_ItemStorage_ProcessInput;
+    gTasks[taskId].func = TEST_ProcessInput;
 }
 
-static void TEST_ItemStorage_ProcessInput(u8 taskId)
+static void TEST_ProcessInput(u8 taskId)
 {
     s16 *data;
     s32 id;
@@ -218,7 +218,7 @@ static void TEST_ItemStorage_ProcessInput(u8 taskId)
         if ((TESTItemPageInfo.itemsAbove + TESTItemPageInfo.cursorPos) != (TESTItemPageInfo.count - 1))
         {
             PlaySE(SE_SELECT);
-            TEST_ItemStorage_ItemSwapChoosePrompt(taskId);
+            TEST_ItemSwapChoosePrompt(taskId);
         }
     }
     else
@@ -232,37 +232,37 @@ static void TEST_ItemStorage_ProcessInput(u8 taskId)
         case LIST_CANCEL:
             PlaySE(SE_SELECT);
             EnableBothScriptContexts();
-            TEST_ItemStorage_CloseMenu(taskId);
+            TEST_CloseMenu(taskId);
             break;
         default:
             PlaySE(SE_SELECT);
-            TEST_ItemStorage_DoItemAction(taskId);
+            TEST_DoItemAction(taskId);
             break;
         }
     }
 }
 
-static void TEST_ItemStorage_DoItemAction(u8 taskId)
+static void TEST_DoItemAction(u8 taskId)
 {
     s16 *data;
     u16 pos;
 
     data = gTasks[taskId].data;
     pos = (TESTItemPageInfo.cursorPos + TESTItemPageInfo.itemsAbove);
-    TEST_ItemStorage_RemoveScrollIndicator();
+    TEST_RemoveScrollIndicator();
 
     gSaveBlock1Ptr->registeredItemLastSelected = pos;
-    TEST_ItemStorage_CloseMenu(taskId);
+    TEST_CloseMenu(taskId);
     UseRegisteredKeyItemOnField(pos+2);
 }
 
-static void TEST_ItemStorage_CloseMenu(u8 taskId) //TEST_ItemStorage_GoBackToPlayerPCMenu
+static void TEST_CloseMenu(u8 taskId)
 {
     s16 *data;
 
     data = gTasks[taskId].data;
     TEST_RemoveItemIcon();
-    TEST_ItemStorage_RemoveScrollIndicator();
+    TEST_RemoveScrollIndicator();
     DestroyListMenuTask(data[5], NULL, NULL);
     DestroySwapLineSprites(gTest->spriteIds, 7);
     TEST_RemoveWinow();
@@ -270,7 +270,7 @@ static void TEST_ItemStorage_CloseMenu(u8 taskId) //TEST_ItemStorage_GoBackToPla
     DestroyTask(taskId);
 }
 
-static void TEST_ItemStorage_ItemSwapChoosePrompt(u8 taskId)
+static void TEST_ItemSwapChoosePrompt(u8 taskId)
 {
     s16 *data;
 
@@ -291,7 +291,7 @@ static void TEST_HandleSwapInput(u8 taskId)
     if (JOY_NEW(SELECT_BUTTON))
     {
         ListMenuGetScrollAndRow(data[5], &(TESTItemPageInfo.itemsAbove), &(TESTItemPageInfo.cursorPos));
-        TEST_ItemStorage_DoItemSwap(taskId, FALSE);
+        TEST_DoItemSwap(taskId, FALSE);
         return;
     }
     id = ListMenu_ProcessInput(data[5]);
@@ -305,15 +305,15 @@ static void TEST_HandleSwapInput(u8 taskId)
     case LIST_CANCEL:
         if (JOY_NEW(A_BUTTON))
         {
-            TEST_ItemStorage_DoItemSwap(taskId, FALSE);
+            TEST_DoItemSwap(taskId, FALSE);
         }
         else
         {
-            TEST_ItemStorage_DoItemSwap(taskId, TRUE);
+            TEST_DoItemSwap(taskId, TRUE);
         }
         break;
     default:
-        TEST_ItemStorage_DoItemSwap(taskId, FALSE);
+        TEST_DoItemSwap(taskId, FALSE);
         break;
     }
 }
@@ -352,7 +352,7 @@ static void TEST_CalcCursorPos(void) //calc cursor pos
     sub_812225C(&(TESTItemPageInfo.itemsAbove), &(TESTItemPageInfo.cursorPos), TESTItemPageInfo.pageItems, TESTItemPageInfo.count); //fine
 }
 
-static void TEST_ItemStorage_RefreshListMenu(void)
+static void TEST_RefreshListMenu(void)
 {
     u16 i;
     u8 windowId = TEST_InitWindow();
@@ -375,7 +375,7 @@ static void TEST_ItemStorage_RefreshListMenu(void)
     gMultiuseListMenuTemplate.maxShowed = 3;//TESTItemPageInfo.pageItems;
 }
 
-static void TEST_ItemStorage_MoveCursor(s32 id, bool8 b, struct ListMenu *thisMenu)
+static void TEST_MoveCursor(s32 id, bool8 b, struct ListMenu *thisMenu)
 {
     if (b != TRUE)
         PlaySE(SE_SELECT);
@@ -389,7 +389,7 @@ static void TEST_ItemStorage_MoveCursor(s32 id, bool8 b, struct ListMenu *thisMe
     }
 }
 
-static void TEST_ItemStorage_PrintFunc(u8 windowId, s32 id, u8 yOffset)
+static void TEST_PrintFunc(u8 windowId, s32 id, u8 yOffset)
 {
     if (id != -2)
     {
@@ -423,7 +423,7 @@ static void TEST_PrintItemIcon(u16 itemId)
     }
 }
 
-static void TEST_ItemStorage_DoItemSwap(u8 taskId, bool8 a)
+static void TEST_DoItemSwap(u8 taskId, bool8 a)
 {
     s16 *data;
     u16 b;
@@ -442,7 +442,7 @@ static void TEST_ItemStorage_DoItemSwap(u8 taskId, bool8 a)
             {
                 TEST_MoveItemSlotInList(gSaveBlock1Ptr->registeredItems, gTest->unk666, b);
                 gSaveBlock1Ptr->registeredItemLastSelected = TEST_GetRegisteredItemIndex(lastSelectedItemId);
-                TEST_ItemStorage_RefreshListMenu();
+                TEST_RefreshListMenu();
             }
         }
     }
@@ -452,10 +452,10 @@ static void TEST_ItemStorage_DoItemSwap(u8 taskId, bool8 a)
     gTest->unk666 = 0xFF;
     data[5] = ListMenuInit(&gMultiuseListMenuTemplate, TESTItemPageInfo.itemsAbove, TESTItemPageInfo.cursorPos);
     ScheduleBgCopyTilemapToVram(0);
-    gTasks[taskId].func = TEST_ItemStorage_ProcessInput;
+    gTasks[taskId].func = TEST_ProcessInput;
 }
 
-static void TEST_ItemStorage_StartScrollIndicator(void)
+static void TEST_StartScrollIndicator(void)
 {
     if (TESTItemPageInfo.scrollIndicatorTaskId == TASK_NONE)
         TESTItemPageInfo.scrollIndicatorTaskId = AddScrollIndicatorArrowPairParameterized(SCROLL_ARROW_UP, 28, 110, 148, TESTItemPageInfo.count - TESTItemPageInfo.pageItems, 0x13F8, 0x13F8, &(TESTItemPageInfo.itemsAbove)); //176, 12, 148 x, y1, y2
@@ -612,14 +612,14 @@ bool8 TEST_CheckRegisteredHasItem(u16 itemId)
 
 u8 TEST_GetRegisteredItemIndex(u16 itemId)
 {
-    s8 i;
+    u8 i;
 
     for (i = 0; i < REGISTERED_ITEMS_MAX; i++)
     {
         if (gSaveBlock1Ptr->registeredItems[i].itemId == itemId)
             return i;
     }
-    return -1;
+    return 0xFF;
 }
 
 static s32 TEST_FindFreeRegisteredItemSlot(void)
@@ -702,7 +702,7 @@ static void TEST_RemoveWinow(void) //remove window
     }
 }
 
-static void TEST_ItemStorage_RemoveScrollIndicator(void)
+static void TEST_RemoveScrollIndicator(void)
 {
     if (TESTItemPageInfo.scrollIndicatorTaskId != TASK_NONE)
     {
