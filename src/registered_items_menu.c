@@ -1,3 +1,4 @@
+//Credits: TheXaman
 #include "global.h"
 #include "constants/songs.h"
 #include "bg.h"
@@ -110,7 +111,7 @@ static const struct ListMenuTemplate gTEST_List = //item storage list
 };
 
 
-//COMPATIBILITY with new pokeemerald versions
+// COMPATIBILITY with new pokeemerald versions, DELETE if using a new version
 #define TASK_NONE 0xFF
 #define SPRITE_NONE 0xFF
 #define WINDOW_NONE 0xFF
@@ -134,14 +135,14 @@ void UpdateSwapLineSpritesPos(u8 *spriteIds, u8 count, s16 x, u16 y)
 {
     sub_8122448(spriteIds, count, x, y);
 }
+//------------------------------
 
 // EWRAM
 static EWRAM_DATA struct TEST_Struct *gTest = NULL;
 static EWRAM_DATA struct TEST_ItemPageStruct TESTItemPageInfo = {0, 0, 0, 0, {0, 0, 0}, 0};
 
 
-
-
+// functions
 void TEST_PlayerPC(void)
 {
     u8 taskId = CreateTask(TaskDummy, 0);
@@ -162,6 +163,7 @@ static void TEST_ItemStorage_ClearAndInitData(u8 taskId)
     u8 offset = 0;
     u8 cursorStart = gSaveBlock1Ptr->registeredItemLastSelected;
     u8 count = TEST_CountUsedRegisteredItemSlots();
+
     //calculate offset from list top
     if (cursorStart > 1 && count > 3)
     {
@@ -177,7 +179,6 @@ static void TEST_ItemStorage_ClearAndInitData(u8 taskId)
         }
     }
 
-    // sub_816B4DC(taskId); //clear old windows
     TESTItemPageInfo.cursorPos = cursorStart;
     TESTItemPageInfo.itemsAbove = offset;
     TESTItemPageInfo.scrollIndicatorTaskId = TASK_NONE;
@@ -186,7 +187,6 @@ static void TEST_ItemStorage_ClearAndInitData(u8 taskId)
     FreeAndReserveObjectSpritePalettes();
     LoadListMenuSwapLineGfx();
     CreateSwapLineSprites(gTest->spriteIds, 7);
-    // ClearDialogWindowAndFrame(0,0);
     gTasks[taskId].func = TEST_ItemStorage_ProcessWithdrawTossInput;
 }
 
@@ -197,10 +197,6 @@ static void TEST_ItemStorage_ProcessWithdrawTossInput(u8 taskId)
     const u8* text;
 
     data = gTasks[taskId].data;
-    // text = gText_WithdrawItem;
-    // x = GetStringCenterAlignXOffset(1, text, 104);
-    // AddTextPrinterParameterized(gUnknown_0203BCC4->windowIds[3], 1, text, x, 1, 0, NULL);
-    // CopyWindowToVram(gTest->windowIds[0], 2);
     TEST_CalculateUsedSlots(); //calculate used slots
     TEST_CalcCursorPos(); //calc cursor pos
     TEST_ItemStorage_RefreshListMenu();
@@ -258,32 +254,6 @@ static void TEST_ItemStorage_DoItemAction(u8 taskId)
     gSaveBlock1Ptr->registeredItemLastSelected = pos;
     TEST_ItemStorage_CloseMenu(taskId);
     UseRegisteredKeyItemOnField(pos+2);
-
-    /*
-    data[2] = 1;
-    if (!data[3])
-    {
-        // if (gSaveBlock1Ptr->pcItems[b].quantity == 1)
-        // {
-        //     ItemStorage_DoItemWithdraw(taskId);
-        //     return;
-        // }
-        // CopyItemName(gSaveBlock1Ptr->pcItems[b].itemId, gStringVar1);
-        // ItemStorage_PrintItemPcResponse(ItemStorage_GetItemPcResponse(ITEMPC_HOW_MANY_TO_WITHDRAW));
-    }
-    else
-    {
-        // if (gSaveBlock1Ptr->pcItems[b].quantity == 1)
-        // {
-        //     ItemStorage_DoItemToss(taskId);
-        //     return;
-        // }
-        // CopyItemName(gSaveBlock1Ptr->pcItems[b].itemId, gStringVar1);
-        // ItemStorage_PrintItemPcResponse(ItemStorage_GetItemPcResponse(ITEMPC_HOW_MANY_TO_TOSS));
-    }
-    // sub_816C6BC(sub_816BC7C(4), data[2], STR_CONV_MODE_LEADING_ZEROS, 8, 1, 3);
-    // gTasks[taskId].func = ItemStorage_HandleQuantityRolling;
-    */
 }
 
 static void TEST_ItemStorage_CloseMenu(u8 taskId) //TEST_ItemStorage_GoBackToPlayerPCMenu
@@ -297,8 +267,6 @@ static void TEST_ItemStorage_CloseMenu(u8 taskId) //TEST_ItemStorage_GoBackToPla
     DestroySwapLineSprites(gTest->spriteIds, 7);
     TEST_RemoveWinow();
     TEST_FreeStructs();
-    // gTasks[taskId].func = ItemStorage_GoBackToPlayerPCMenu_InitStorage;
-    // SetMainCallback2(CB2_ReturnToField);
     DestroyTask(taskId);
 }
 
@@ -311,8 +279,6 @@ static void TEST_ItemStorage_ItemSwapChoosePrompt(u8 taskId)
     gTest->unk666 = (TESTItemPageInfo.itemsAbove + TESTItemPageInfo.cursorPos);
     TEST_GetSwappingCursorPositionAndPrint(data[5], 0, 0);
     TEST_UpdateSwapLinePos(gTest->unk666);
-    // CopyItemName(gSaveBlock1Ptr->pcItems[gTest->unk666].itemId, gStringVar1);
-    // ItemStorage_PrintItemPcResponse(ItemStorage_GetItemPcResponse(ITEMPC_SWITCH_WHICH_ITEM));
     gTasks[taskId].func = TEST_HandleSwapInput;
 }
 
@@ -379,7 +345,6 @@ static void TEST_CalculateUsedSlots(void) //calculate used slots
 {
     TEST_CompactRegisteredItems();
     TEST_CalcAndSetUsedSlotsCount(gSaveBlock1Ptr->registeredItems, REGISTERED_ITEMS_MAX, &(TESTItemPageInfo.pageItems), &(TESTItemPageInfo.count), 3);
-    //registeredItems
 }
 
 static void TEST_CalcCursorPos(void) //calc cursor pos
@@ -421,7 +386,6 @@ static void TEST_ItemStorage_MoveCursor(s32 id, bool8 b, struct ListMenu *thisMe
             TEST_PrintItemIcon(gSaveBlock1Ptr->registeredItems[id].itemId);
         else
             TEST_PrintItemIcon(ITEMPC_GO_BACK_TO_PREV);
-        // sub_816BEF0(id); //print item description
     }
 }
 
@@ -436,9 +400,6 @@ static void TEST_ItemStorage_PrintFunc(u8 windowId, s32 id, u8 yOffset)
             else
                 TEST_PrintSwappingCursor(yOffset, 0xFF, 0xFF);
         }
-        // ConvertIntToDecimalStringN(gStringVar1, gSaveBlock1Ptr->pcItems[id].quantity, STR_CONV_MODE_RIGHT_ALIGN, 3);
-        // StringExpandPlaceholders(gStringVar4, gText_xVar1);
-        // AddTextPrinterParameterized(windowId, 7, gStringVar4, GetStringRightAlignXOffset(7, gStringVar4, 104), yOffset, 0xFF, NULL);
     }
 }
 
@@ -578,7 +539,6 @@ static void TEST_ChangeLastSelectedItemIndex(u8 index)
 
 static void TEST_RemoveRegisteredItemIndex(u8 index)
 {
-    // UB: should use GetPCItemQuantity and SetPCItemQuantity functions
     TEST_ChangeLastSelectedItemIndex(index);
     gSaveBlock1Ptr->registeredItems[index].itemId = ITEM_NONE;
     TEST_CompactRegisteredItems();
@@ -614,6 +574,7 @@ void TEST_CompactRegisteredItems(void)
             }
         }
     }
+    gSaveBlock1Ptr->registeredItemListCount = TEST_CountUsedRegisteredItemSlots();
 }
 
 static void TEST_CalcAndSetUsedSlotsCount(struct RegisteredItemSlot *slots, u8 count, u8 *arg2, u8 *usedSlotsCount, u8 maxUsedSlotsCount)
@@ -675,28 +636,15 @@ bool8 TEST_AddRegisteredItem(u16 itemId)
 {
     u8 i;
     s8 freeSlot;
-    struct ItemSlot *newItems;
+    struct RegisteredItemSlot *newItems;
 
     // Copy PC items
     newItems = AllocZeroed(sizeof(gSaveBlock1Ptr->registeredItems));
     memcpy(newItems, gSaveBlock1Ptr->registeredItems, sizeof(gSaveBlock1Ptr->registeredItems));
 
-    // Use any item slots that already contain this item
-    /*
-    for (i = 0; i < REGISTERED_ITEMS_MAX; i++)
-    {
-        if (newItems[i].itemId == itemId)
-        {
-            TEST_RemoveRegisteredItemIndex(i);
-            Free(newItems);
-            return TRUE;
-        }
-    }
-    */
-
-
+    //check for a free slot
     freeSlot = TEST_FindFreeRegisteredItemSlot();
-    if (freeSlot == -1)
+    if (freeSlot == -1) //no slot left, return (triggers error messsage)
     {
         Free(newItems);
         return FALSE;
@@ -704,6 +652,7 @@ bool8 TEST_AddRegisteredItem(u16 itemId)
     else
     {
         newItems[freeSlot].itemId = itemId;
+        gSaveBlock1Ptr->registeredItemListCount++;
     }
 
     // Copy items back to the PC

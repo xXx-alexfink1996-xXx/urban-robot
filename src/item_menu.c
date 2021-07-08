@@ -1879,24 +1879,6 @@ void Task_ActuallyToss(u8 taskId)
     }
 }
 
-/*
-void ItemMenu_Register(u8 taskId)
-{
-    s16* data = gTasks[taskId].data;
-    u16* scrollPos = &gBagPositionStruct.scrollPosition[gBagPositionStruct.pocket];
-    u16* cursorPos = &gBagPositionStruct.cursorPosition[gBagPositionStruct.pocket];
-
-    if (gSaveBlock1Ptr->registeredItem == gSpecialVar_ItemId)
-        gSaveBlock1Ptr->registeredItem = 0;
-    else
-        gSaveBlock1Ptr->registeredItem = gSpecialVar_ItemId;
-    DestroyListMenuTask(data[0], scrollPos, cursorPos);
-    LoadBagItemListBuffers(gBagPositionStruct.pocket);
-    data[0] = ListMenuInit(&gMultiuseListMenuTemplate, *scrollPos, *cursorPos);
-    ScheduleBgCopyTilemapToVram(0);
-    ItemMenu_Cancel(taskId);
-}*/
-
 void ItemMenu_Give(u8 taskId)
 {
     BagMenu_RemoveSomeWindow();
@@ -2023,42 +2005,6 @@ void Task_ItemContext_ItemPC_2(u8 taskId)
     else
         BagMenu_PrintItemCantBeHeld(taskId);
 }
-
-/*
-#define tUsingRegisteredKeyItem data[3]
-
-bool8 UseRegisteredKeyItemOnField(void)
-{
-    u8 taskId;
-
-    if (InUnionRoom() == TRUE || InBattlePyramid() || InBattlePike() || InMultiPartnerRoom() == TRUE)
-        return FALSE;
-    HideMapNamePopUpWindow();
-    ChangeBgY_ScreenOff(0, 0, 0);
-    if (gSaveBlock1Ptr->registeredItem != ITEM_NONE)
-    {
-        if (CheckBagHasItem(gSaveBlock1Ptr->registeredItem, 1) == TRUE)
-        {
-            ScriptContext2_Enable();
-            FreezeObjectEvents();
-            sub_808B864();
-            sub_808BCF4();
-            gSpecialVar_ItemId = gSaveBlock1Ptr->registeredItem;
-            taskId = CreateTask(ItemId_GetFieldFunc(gSaveBlock1Ptr->registeredItem), 8);
-            gTasks[taskId].tUsingRegisteredKeyItem = TRUE;
-            return TRUE;
-        }
-        else
-        {
-            gSaveBlock1Ptr->registeredItem = ITEM_NONE;
-        }
-    }
-    ScriptContext1_SetupScript(EventScript_SelectWithoutRegisteredItem);
-    return TRUE;
-}
-
-#undef tUsingRegisteredKeyItem
-*/
 
 void Task_ItemContext_Sell(u8 taskId)
 {
@@ -2577,270 +2523,7 @@ void PrintTMHMMoveData(u16 itemId)
 }
 
 
-
-//menu code
-/*
-#define TAG_ITEM_ICON_BASE_REG 2110
-static void RegisteredItemsMenuAddItemIcon(u16 item)
-{
-    u8 spriteId = sRegisteredItemsMenuIcon;
-    if (spriteId != 0xFF)
-        return;
-
-    spriteId = AddItemIconSprite(TAG_ITEM_ICON_BASE_REG, TAG_ITEM_ICON_BASE_REG, item);
-    if (spriteId != MAX_SPRITES)
-    {
-        gSprites[spriteId].pos2.x = 32;
-        gSprites[spriteId].pos2.y = 132;
-        gSprites[spriteId].oam.priority = 0;
-    }
-    sRegisteredItemsMenuIcon = spriteId;
-}
-static void RegisteredItemsMenuRemoveItemIcon(void)
-{
-    u8 spriteId = sRegisteredItemsMenuIcon;
-    if (spriteId == 0xFF)
-        return;
-
-    FreeSpriteTilesByTag(TAG_ITEM_ICON_BASE_REG);
-    FreeSpritePaletteByTag(TAG_ITEM_ICON_BASE_REG);
-    DestroySprite(&gSprites[spriteId]);
-    sRegisteredItemsMenuIcon = 0xFF;
-}
-static void RegisteredItemsMenuShowItemIcon(s32 item, bool8 onInit, struct ListMenu *list)
-{
-    if (onInit != TRUE)
-        PlaySE(SE_SELECT);
-
-    RegisteredItemsMenuRemoveItemIcon();
-
-    RegisteredItemsMenuAddItemIcon(item);
-
-    FillWindowPixelBuffer(2, PIXEL_FILL(0));
-}
-static const struct ListMenuTemplate sMultichoiceListTemplate =
-{
-    .header_X = 0,
-    .item_X = 8,
-    .cursor_X = 0,
-    .upText_Y = 1,
-    .cursorPal = 2,
-    .fillValue = 1,
-    .cursorShadowPal = 3,
-    .lettersSpacing = 1,
-    .itemVerticalPadding = 0,
-    .scrollMultiple = LIST_NO_MULTIPLE_SCROLL,
-    .fontId = 1,
-    .cursorKind = 0
-};
-static const struct ListMenuTemplate sRegisteredItemsMenuListTemplate =
-{
-    // .items = NULL,
-    .moveCursorFunc = RegisteredItemsMenuShowItemIcon,
-    // .itemPrintFunc = BuyMenuPrintPriceInList,
-    .totalItems = 0,
-    .maxShowed = 0,
-    .windowId = 1,
-    .header_X = 0,
-    .item_X = 48,
-    .cursor_X = 40,
-    .upText_Y = 1,
-    .cursorPal = 2,
-    .fillValue = 1,
-    .cursorShadowPal = 3,
-    .lettersSpacing = 1,
-    .itemVerticalPadding = 0,
-    .scrollMultiple = LIST_NO_MULTIPLE_SCROLL,
-    .fontId = 1,
-    .cursorKind = 0
-};
-
-static void RegisteredItemsMenuSetListEntry(struct ListMenuItem *menuItem, u16 item, u8 *name)
-{
-    CopyItemName(item, name);
-
-    menuItem->name = name;
-    menuItem->id = item;
-}
-
-static bool8 CalcRegisteredItemsCount(void)
-{
-    u8 i, itemCount;
-    for (i = 0; i<REGISTERED_ITEMS_MAX; i++)
-    {
-        if (gSaveBlock1Ptr->registeredItemList[i] != ITEM_NONE)
-        {
-            itemCount++;
-        }
-    }
-    return TRUE;
-}
-
-static void RegisteredItemsMenuBuildListMenuTemplate(void)
-{
-    u8 i;
-    u8 itemCount = gSaveBlock1Ptr->registeredItemLCount;
-    
-    sListMenuItems = Alloc((itemCount) * sizeof(*sListMenuItems));
-    sItemNames = Alloc((itemCount) * sizeof(*sItemNames));
-    for (i = 0; i < itemCount; i++)
-        RegisteredItemsMenuSetListEntry(&sListMenuItems[i], gSaveBlock1Ptr->registeredItemList[i], sItemNames[i]);
-
-    gMultiuseListMenuTemplate = sRegisteredItemsMenuListTemplate;
-    gMultiuseListMenuTemplate.items = sListMenuItems;
-    gMultiuseListMenuTemplate.totalItems = itemCount;
-    gMultiuseListMenuTemplate.maxShowed = 3;
-}
-
-void ShowRegisteredItemsMenu(void)
-{
-    struct WindowTemplate template;
-    u8 i, windowId, taskId;
-    u8 Width = 28;
-    u8 Left = 1;
-    u8 Top = 13;
-    u8 maxShowed = 3;
-    u8 Height = maxShowed*2;
-    u8 offset = 0;
-    u8 cursorStart = gSaveBlock1Ptr->registeredItemLastSelected;
-
-    ScriptContext2_Enable();
-
-    HideMapNamePopUpWindow(); //otherwise causes weird bugs if called at the same time
-
-    //create the window and loads the proper border
-    template = CreateWindowTemplate(0, Left, Top, Width, Height, 0xF, 0x64);
-    windowId = AddWindow(&template);
-    LoadMessageBoxAndBorderGfx();
-    SetStandardWindowBorderStyle(windowId, 0);
-
-    //safety reset
-    sRegisteredItemsMenuIcon = 0xFF;
-
-    //calculate offset from list top
-    if (cursorStart > 1 && gSaveBlock1Ptr->registeredItemLCount > 3)
-    {
-        if (cursorStart == gSaveBlock1Ptr->registeredItemLCount - 1)
-        {
-            offset = cursorStart - 2;
-            cursorStart = 2;
-        }
-        else
-        {
-            offset = cursorStart - 1;
-            cursorStart = 1;
-        }
-    }
-
-    gMultiuseListMenuTemplate.windowId = windowId;
-    RegisteredItemsMenuBuildListMenuTemplate();
-
-    taskId = CreateTask(Task_ScrollingMultichoiceInput, 0);
-    gTasks[taskId].data[0] = ListMenuInit(&gMultiuseListMenuTemplate, offset, cursorStart);
-    // gTasks[taskId].data[1] = taskId;
-    gTasks[taskId].data[2] = windowId;
-    ScheduleBgCopyTilemapToVram(0);
-}
-
-static void RegisteredItemsMenuFreeMemory(void)
-{
-    Free(&sRegisteredItemsMenuIcon);
-    Free(sListMenuItems);
-    Free(sItemNames);
-    // FreeAllWindowBuffers(); //somehow causes the weird follow up window error
-}
-
-static void CloseRegisteredItemsMenu(u8 taskId)
-{
-    u8 windowId = gTasks[taskId].data[2];
-    RegisteredItemsMenuRemoveItemIcon();
-
-    DestroyListMenuTask(gTasks[taskId].data[0], NULL, NULL);
-    // ClearStdWindowAndFrame(gTasks[taskId].data[2], TRUE);
-    ClearStdWindowAndFrameToTransparent(windowId, TRUE);
-    FillWindowPixelBuffer(windowId, PIXEL_FILL(0));
-    CopyWindowToVram(windowId, 2);
-    RemoveWindow(windowId);
-
-    RegisteredItemsMenuFreeMemory();
-    DestroyTask(taskId);
-    EnableBothScriptContexts();
-}
-
-static void Task_ScrollingMultichoiceInput(u8 taskId)
-{
-    s32 input = ListMenu_ProcessInput(gTasks[taskId].data[0]);
-    u8 pos;
-
-    switch (input)
-    {
-    case LIST_HEADER:
-    case LIST_NOTHING_CHOSEN:
-        break;
-    case LIST_CANCEL:
-        CloseRegisteredItemsMenu(taskId);
-        break;
-    default:
-        pos = Register_GetItemListPosition(input);
-        gSaveBlock1Ptr->registeredItemLastSelected = pos; 
-        UseRegisteredKeyItemOnField(pos+2);
-        CloseRegisteredItemsMenu(taskId);
-        break;
-    }
-}
-*/
-
-// New
-/*
-static bool8 Register_SwapItemInArray(u8 pos1, u8 pos2)
-{
-    u16 itemId = gSaveBlock1Ptr->registeredItemList[pos1];
-
-    if (gSaveBlock1Ptr->registeredItemList[pos2] != ITEM_NONE)
-    {
-        gSaveBlock1Ptr->registeredItemList[pos1] = gSaveBlock1Ptr->registeredItemList[pos2];
-        gSaveBlock1Ptr->registeredItemList[pos2] = itemId;
-        return TRUE;
-    }
-    
-    return FALSE;
-}
-
-static bool8 Register_CleanItemArray(u8 start)
-{
-    u8 i;
-    
-    for (i = start; i < REGISTERED_ITEMS_MAX-1 ; i++)
-    {
-        if (!Register_SwapItemInArray(i, i+1))
-            return TRUE;
-    }
-    return TRUE;
-}
-
-static bool8 Register_IsItemInList(u16 itemId)
-{
-    u8 i;
-    for (i = 0; i < REGISTERED_ITEMS_MAX; i++)
-    {
-        if (gSaveBlock1Ptr->registeredItemList[i] == itemId)
-            return TRUE;
-    }
-    return FALSE;
-}
-
-static u8 Register_GetItemListPosition(u16 itemId)
-{
-    u8 i;
-    for (i = 0; i < REGISTERED_ITEMS_MAX; i++)
-    {
-        if (gSaveBlock1Ptr->registeredItemList[i] == itemId)
-            return i;
-    }
-    return FALSE;
-}
-*/
-
+// tx_registered_items_menu, based on code from ghoulslash
 static void ResetRegisteredItem(u16 itemId)
 {
     u8 i;
@@ -2848,23 +2531,7 @@ static void ResetRegisteredItem(u16 itemId)
         gSaveBlock1Ptr->registeredItemSelect = ITEM_NONE;
     else
         TEST_RemoveRegisteredItem(itemId);
-
-    // for (i = 0; i< REGISTERED_ITEMS_MAX; i++)
-    // {
-    //     if (gSaveBlock1Ptr->registeredItemList[i] == item)
-    //     {
-    //         gSaveBlock1Ptr->registeredItemList[i] = ITEM_NONE;
-    //         gSaveBlock1Ptr->registeredItemLCount--;
-    //         Register_CleanItemArray(i);
-    //         if (gSaveBlock1Ptr->registeredItemLastSelected > i)
-    //             gSaveBlock1Ptr->registeredItemLastSelected--;
-    //         else if (gSaveBlock1Ptr->registeredItemLastSelected == i)
-    //             gSaveBlock1Ptr->registeredItemLastSelected = 0;
-    //         return;
-    //     }
-    // }
 }
-
 
 static void ItemMenu_FinishRegister(u8 taskId)
 {
@@ -2879,7 +2546,7 @@ static void ItemMenu_FinishRegister(u8 taskId)
     ItemMenu_Cancel(taskId);
 }
 
-static void ItemMenu_FailRegister(u8 taskId)
+static void ItemMenu_FailRegister(u8 taskId) //returns error message if no free slot left
 {
     s16* data = gTasks[taskId].data;
     u16* scrollPos = &gBagPositionStruct.scrollPosition[gBagPositionStruct.pocket];
@@ -2930,16 +2597,6 @@ static void ItemMenu_RegisterList(u8 taskId)
         gTasks[taskId].func = ItemMenu_FinishRegister;
     else
         gTasks[taskId].func = ItemMenu_FailRegister;
-
-    // //return error or save item to slot
-    // if (slot == 0xFF)
-    //     gTasks[taskId].func = ItemMenu_FailRegister;
-    // else
-    // {
-    //     gSaveBlock1Ptr->registeredItemList[slot] = gSpecialVar_ItemId;
-    //     gSaveBlock1Ptr->registeredItemLCount++;
-    //     gTasks[taskId].func = ItemMenu_FinishRegister;
-    // }
 }
 
 static void ItemMenu_Deselect(u8 taskId)
@@ -2951,11 +2608,6 @@ static void ItemMenu_Deselect(u8 taskId)
     u16 itemId = BagGetItemIdByPocketPosition(gBagPositionStruct.pocket + 1, listPosition);
 
     ResetRegisteredItem(itemId);
-
-    // if (gSaveBlock1Ptr->registeredItemSelect == itemId)
-    //     gSaveBlock1Ptr->registeredItemSelect = ITEM_NONE;
-    // else
-    //     TEST_RemoveRegisteredItem(itemId);
 
     gTasks[taskId].func = ItemMenu_FinishRegister;
 }

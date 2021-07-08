@@ -118,7 +118,7 @@
 #define DEX_FLAGS_NO (ROUND_BITS_TO_BYTES(POKEMON_SLOTS_NUMBER))
 #define NUM_FLAG_BYTES (ROUND_BITS_TO_BYTES(FLAGS_COUNT))
 
-// tx_registered_items_menu
+//tx_registered_items_menu
 #define REGISTERED_ITEMS_MAX 10
 
 struct Coords8
@@ -994,9 +994,8 @@ struct SaveBlock1
     /*0x3D64*/ struct SaveTrainerHill trainerHill;
     /*0x3D70*/ struct WaldaPhrase waldaPhrase;
     // sizeof: 0x3D88
-                u16 registeredItemList[REGISTERED_ITEMS_MAX];
-                u8 registeredItemLCount:4; //max 16 items
-                u8 registeredItemLastSelected:4;
+                u8 registeredItemLastSelected:4; //max 16 items
+                u8 registeredItemListCount:4;
                 struct RegisteredItemSlot registeredItems[REGISTERED_ITEMS_MAX];
 };
 
