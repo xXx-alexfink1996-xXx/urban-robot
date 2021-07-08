@@ -11,6 +11,7 @@ struct TEST_ItemPageStruct
     u8 scrollIndicatorTaskId;
 };
 
+void TEST_RegisteredItemsMenuNewGame(void);
 void TEST_PlayerPC(void);
 u8 TEST_CountUsedRegisteredItemSlots(void);
 void TEST_RemoveRegisteredItem(u16 itemId);

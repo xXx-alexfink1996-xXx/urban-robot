@@ -597,9 +597,9 @@ void SwapRegisteredBike(void)
         gSaveBlock1Ptr->registeredItemSelect = ITEM_MACH_BIKE;
         break;
     }
-    if (pos_ACRO != 0xFF)
+    if (pos_ACRO != -1)
         gSaveBlock1Ptr->registeredItems[pos_ACRO].itemId = ITEM_MACH_BIKE;
-    else if (pos_MACH != 0xFF)
+    else if (pos_MACH != -1)
         gSaveBlock1Ptr->registeredItems[pos_MACH].itemId = ITEM_ACRO_BIKE;
 }
 

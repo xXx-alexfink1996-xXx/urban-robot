@@ -541,6 +541,7 @@ static void TEST_RemoveRegisteredItemIndex(u8 index)
 {
     TEST_ChangeLastSelectedItemIndex(index);
     gSaveBlock1Ptr->registeredItems[index].itemId = ITEM_NONE;
+    gSaveBlock1Ptr->registeredItemListCount--;
     TEST_CompactRegisteredItems();
 }
 
@@ -552,6 +553,7 @@ void TEST_RemoveRegisteredItem(u16 itemId)
             if (gSaveBlock1Ptr->registeredItems[i].itemId == itemId)
             {
                 gSaveBlock1Ptr->registeredItems[i].itemId = ITEM_NONE;
+                gSaveBlock1Ptr->registeredItemListCount--;
                 TEST_ChangeLastSelectedItemIndex(i);
                 TEST_CompactRegisteredItems();
             }
@@ -610,14 +612,14 @@ bool8 TEST_CheckRegisteredHasItem(u16 itemId)
 
 u8 TEST_GetRegisteredItemIndex(u16 itemId)
 {
-    u8 i;
+    s8 i;
 
     for (i = 0; i < REGISTERED_ITEMS_MAX; i++)
     {
         if (gSaveBlock1Ptr->registeredItems[i].itemId == itemId)
             return i;
     }
-    return 0xFF;
+    return -1;
 }
 
 static s32 TEST_FindFreeRegisteredItemSlot(void)
@@ -661,6 +663,17 @@ bool8 TEST_AddRegisteredItem(u16 itemId)
     return TRUE;
 }
 
+void TEST_RegisteredItemsMenuNewGame(void)
+{
+    u8 i;
+    struct RegisteredItemSlot *newItems;
+    for (i = i ; i < REGISTERED_ITEMS_MAX; i++)
+    {
+        gSaveBlock1Ptr->registeredItems[i].itemId = ITEM_NONE;
+    }
+    gSaveBlock1Ptr->registeredItemLastSelected = 0;
+    gSaveBlock1Ptr->registeredItemListCount = 0;
+}
 
 
 //helper cleanup
