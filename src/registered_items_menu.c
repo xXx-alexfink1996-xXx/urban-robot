@@ -4,6 +4,7 @@
 #include "bg.h"
 #include "decoration.h"
 #include "event_scripts.h"
+#include "event_object_lock.h"
 #include "event_object_movement.h"
 #include "field_screen_effect.h"
 #include "field_weather.h"
@@ -147,6 +148,7 @@ static EWRAM_DATA struct TxRegItemsMenu_ItemPageStruct TxRegItemsMenuItemPageInf
 void TxRegItemsMenu_OpenMenu(void)
 {
     u8 taskId = CreateTask(TaskDummy, 0);
+    ScriptFreezeObjectEvents();
     gTasks[taskId].func = TxRegItemsMenu_InitMenuFunctions;
 }
 
@@ -268,6 +270,7 @@ static void TxRegItemsMenu_CloseMenu(u8 taskId)
     DestroySwapLineSprites(gTxRegItemsMenu->spriteIds, 7);
     TxRegItemsMenu_RemoveWinow();
     TxRegItemsMenu_FreeStructs();
+    ScriptUnfreezeObjectEvents();
     DestroyTask(taskId);
 }
 
