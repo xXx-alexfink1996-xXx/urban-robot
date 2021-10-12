@@ -73,7 +73,7 @@ static void TxRegItemsMenu_RemoveRegisteredItemIndex(u8 index);
 static s32 TxRegItemsMenu_FindFreeRegisteredItemSlot(void);
 //helper cleanup
 static void TxRegItemsMenu_RemoveItemIcon(void);
-static void TxRegItemsMenu_RemoveWinow(void);
+static void TxRegItemsMenu_RemoveWindow(void);
 static void TxRegItemsMenu_RemoveScrollIndicator(void);
 static void TxRegItemsMenu_FreeStructs(void);
 
@@ -268,7 +268,7 @@ static void TxRegItemsMenu_CloseMenu(u8 taskId)
     TxRegItemsMenu_RemoveScrollIndicator();
     DestroyListMenuTask(data[5], NULL, NULL);
     DestroySwapLineSprites(gTxRegItemsMenu->spriteIds, 7);
-    TxRegItemsMenu_RemoveWinow();
+    TxRegItemsMenu_RemoveWindow();
     TxRegItemsMenu_FreeStructs();
     ScriptUnfreezeObjectEvents();
     DestroyTask(taskId);
@@ -693,7 +693,7 @@ static void TxRegItemsMenu_RemoveItemIcon(void) //remove item storage selected i
     }
 }
 
-static void TxRegItemsMenu_RemoveWinow(void) //remove window
+static void TxRegItemsMenu_RemoveWindow(void) //remove window
 {
     u8 *windowIdLoc = &(gTxRegItemsMenu->windowIds[0]);
     if (*windowIdLoc != WINDOW_NONE)
