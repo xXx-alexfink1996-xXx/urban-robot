@@ -33,6 +33,7 @@
 #include "window.h"
 #include "menu_specialized.h"
 #include "registered_items_menu.h"
+#include "graphics.h"
 
 struct TxRegItemsMenu_Struct
 {
@@ -77,6 +78,8 @@ static void TxRegItemsMenu_RemoveWindow(void);
 static void TxRegItemsMenu_RemoveScrollIndicator(void);
 static void TxRegItemsMenu_FreeStructs(void);
 
+#define TAG_SWAP_LINE 109
+#define TAG_SCROLL_ARROW 5112
 
 static const struct WindowTemplate TxRegItemsMenu_WindowTemplates[1] =
 {
@@ -187,7 +190,9 @@ static void TxRegItemsMenu_ClearAndInitData(u8 taskId)
     TxRegItemsMenuItemPageInfo.scrollIndicatorTaskId = TASK_NONE;
     TxRegItemsMenuItemPageInfo.pageItems = 3; //ItemStorage_SetItemAndMailCount(taskId);
     TxRegItemsMenu_AllocateStruct(); //sub_816BC14(); //allocate struct
-    FreeAndReserveObjectSpritePalettes();
+    //FreeAndReserveObjectSpritePalettes();
+    //AllocSpritePalette(TAG_SWAP_LINE);
+    //LoadPalette(&gBagSwapLineGfx, 432, 16);
     LoadListMenuSwapLineGfx();
     CreateSwapLineSprites(gTxRegItemsMenu->spriteIds, 7);
     gTasks[taskId].func = TxRegItemsMenu_InitDataAndCreateListMenu;
@@ -462,7 +467,7 @@ static void TxRegItemsMenu_DoItemSwap(u8 taskId, bool8 a)
 static void TxRegItemsMenu_StartScrollIndicator(void)
 {
     if (TxRegItemsMenuItemPageInfo.scrollIndicatorTaskId == TASK_NONE)
-        TxRegItemsMenuItemPageInfo.scrollIndicatorTaskId = AddScrollIndicatorArrowPairParameterized(SCROLL_ARROW_UP, 28, 110, 148, TxRegItemsMenuItemPageInfo.count - TxRegItemsMenuItemPageInfo.pageItems, 0x13F8, 0x13F8, &(TxRegItemsMenuItemPageInfo.itemsAbove)); //176, 12, 148 x, y1, y2
+        TxRegItemsMenuItemPageInfo.scrollIndicatorTaskId = AddScrollIndicatorArrowPairParameterized(SCROLL_ARROW_UP, 28, 110, 148, TxRegItemsMenuItemPageInfo.count - TxRegItemsMenuItemPageInfo.pageItems, 0x13F8, TAG_SWAP_LINE, &(TxRegItemsMenuItemPageInfo.itemsAbove)); //176, 12, 148 x, y1, y2
 }
 
 static void TxRegItemsMenu_UpdateSwapLinePos(u8 y)
