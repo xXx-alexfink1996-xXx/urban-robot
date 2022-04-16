@@ -92,6 +92,10 @@ static const struct SpriteTemplate sSpriteTemplate_SwapLine =
 
 //tx_registered_items_menu
 #define TAG_SWAP_LINE_TX    5110
+static const struct CompressedSpriteSheet sSpriteSheet_SwapLine_RegisteredItemsMenu =
+{
+    gSwapLineGfx_RegisteredItemsMenu, 0x100, TAG_SWAP_LINE
+};
 static const struct SpriteTemplate sSpriteTemplate_SwapLine_RegisteredItemsMenu =
 {
     .tileTag = TAG_SWAP_LINE,
@@ -411,7 +415,7 @@ void LoadListMenuSwapLineGfx(void)
 //tx_registered_items_menu
 void LoadListMenuSwapLineGfx_RegisteredItemsMenu(void)
 {
-    LoadCompressedSpriteSheet(&sSpriteSheet_SwapLine);
+    LoadCompressedSpriteSheet(&sSpriteSheet_SwapLine_RegisteredItemsMenu);
     //LoadCompressedSpritePalette(&sSpritePalette_SwapLine);
 }
 

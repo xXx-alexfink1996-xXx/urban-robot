@@ -277,8 +277,8 @@ static const struct ListMenuTemplate sItemListMenu =
     .cursorKind = 0
 };
 
-static const u8 sMenuText_Select[] = _("Select");
-static const u8 sMenuText_L[] = _("List");
+static const u8 sMenuText_Select[] = _("SELECT");
+static const u8 sMenuText_L[] = _("LIST");
 static const struct MenuAction sItemMenuActions[] = {
     [ACTION_USE]               = {gMenuText_Use,      ItemMenu_UseOutOfBattle},
     [ACTION_TOSS]              = {gMenuText_Toss,     ItemMenu_Toss},
