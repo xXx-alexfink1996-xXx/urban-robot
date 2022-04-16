@@ -45,7 +45,7 @@
 #include "berry_powder.h"
 #include "mevent.h"
 #include "union_room_chat.h"
-#include "registered_items_menu.h"
+#include "tx_registered_items_menu.h"
 
 extern const u8 EventScript_ResetAllMapFlags[];
 

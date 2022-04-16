@@ -7,7 +7,7 @@
 #include "malloc.h"
 #include "secret_base.h"
 #include "item_menu.h"
-#include "registered_items_menu.h"
+#include "tx_registered_items_menu.h"
 #include "strings.h"
 #include "load_save.h"
 #include "item_use.h"

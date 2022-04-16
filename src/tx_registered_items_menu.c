@@ -32,7 +32,7 @@
 #include "task.h"
 #include "window.h"
 #include "menu_specialized.h"
-#include "registered_items_menu.h"
+#include "tx_registered_items_menu.h"
 #include "graphics.h"
 
 struct TxRegItemsMenu_Struct

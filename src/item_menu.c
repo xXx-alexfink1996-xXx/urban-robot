@@ -37,7 +37,7 @@
 #include "player_pc.h"
 #include "pokemon.h"
 #include "pokemon_summary_screen.h"
-#include "registered_items_menu.h"
+#include "tx_registered_items_menu.h"
 #include "scanline_effect.h"
 #include "script.h"
 #include "script_menu.h"

@@ -20,7 +20,7 @@
 #include "metatile_behavior.h"
 #include "overworld.h"
 #include "pokemon.h"
-#include "registered_items_menu.h"
+#include "tx_registered_items_menu.h"
 #include "safari_zone.h"
 #include "script.h"
 #include "secret_base.h"
