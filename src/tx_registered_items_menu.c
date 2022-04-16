@@ -60,7 +60,7 @@ static void TxRegItemsMenu_AllocateStruct(void);
 static u8 TxRegItemsMenu_InitWindow(void);
 static void TxRegItemsMenu_RefreshListMenu(void);
 static void TxRegItemsMenu_MoveCursor(s32 id, bool8 b, struct ListMenu *thisMenu);
-static void TxRegItemsMenu_PrintFunc(u8 windowId, s32 id, u8 yOffset);
+static void TxRegItemsMenu_PrintFunc(u8 windowId, u32 id, u8 yOffset);
 static void TxRegItemsMenu_PrintItemIcon(u16 itemId);
 static void TxRegItemsMenu_DoItemSwap(u8 taskId, bool8 a);
 static void TxRegItemsMenu_StartScrollIndicator(void);
@@ -115,33 +115,6 @@ static const struct ListMenuTemplate gTxRegItemsMenu_List = //item storage list
     .fontId = 7
 };
 
-
-// COMPATIBILITY with new pokeemerald versions, DELETE if using a new version
-#define TASK_NONE 0xFF
-#define SPRITE_NONE 0xFF
-#define WINDOW_NONE 0xFF
-void LoadListMenuSwapLineGfx(void)
-{
-    LoadListMenuArrowsGfx();
-}
-void CreateSwapLineSprites(u8 *spriteIds, u8 count)
-{
-    sub_8122344(spriteIds, count);
-}
-void DestroySwapLineSprites(u8 *spriteIds, u8 count)
-{
-    sub_81223B0(spriteIds, count);
-}
-void SetSwapLineSpritesInvisibility(u8 *spriteIds, u8 count, bool8 invisible)
-{
-    sub_81223FC(spriteIds, count, invisible);
-}
-void UpdateSwapLineSpritesPos(u8 *spriteIds, u8 count, s16 x, u16 y)
-{
-    sub_8122448(spriteIds, count, x, y);
-}
-//------------------------------
-
 // EWRAM
 static EWRAM_DATA struct TxRegItemsMenu_Struct *gTxRegItemsMenu = NULL;
 static EWRAM_DATA struct TxRegItemsMenu_ItemPageStruct TxRegItemsMenuItemPageInfo = {0, 0, 0, 0, {0, 0, 0}, 0};
@@ -151,7 +124,7 @@ static EWRAM_DATA struct TxRegItemsMenu_ItemPageStruct TxRegItemsMenuItemPageInf
 void TxRegItemsMenu_OpenMenu(void)
 {
     u8 taskId = CreateTask(TaskDummy, 0);
-    ScriptFreezeObjectEvents();
+    FreezeObjects_WaitForPlayer();
     gTasks[taskId].func = TxRegItemsMenu_InitMenuFunctions;
 }
 
@@ -159,7 +132,7 @@ static void TxRegItemsMenu_InitMenuFunctions(u8 taskId)
 {
     s16 *data = gTasks[taskId].data;
 
-    NUM_ITEMS = TxRegItemsMenu_CountUsedRegisteredItemSlots();
+    u8 count = TxRegItemsMenu_CountUsedRegisteredItemSlots();
     TxRegItemsMenu_ClearAndInitData(taskId);
 }
 
@@ -358,7 +331,7 @@ static void TxRegItemsMenu_CalculateUsedSlots(void) //calculate used slots
 
 static void TxRegItemsMenu_CalcCursorPos(void) //calc cursor pos
 {
-    sub_812225C(&(TxRegItemsMenuItemPageInfo.itemsAbove), &(TxRegItemsMenuItemPageInfo.cursorPos), TxRegItemsMenuItemPageInfo.pageItems, TxRegItemsMenuItemPageInfo.count); //fine
+    SetCursorWithinListBounds(&(TxRegItemsMenuItemPageInfo.itemsAbove), &(TxRegItemsMenuItemPageInfo.cursorPos), TxRegItemsMenuItemPageInfo.pageItems, TxRegItemsMenuItemPageInfo.count); //fine
 }
 
 static void TxRegItemsMenu_RefreshListMenu(void)
@@ -384,6 +357,7 @@ static void TxRegItemsMenu_RefreshListMenu(void)
     gMultiuseListMenuTemplate.maxShowed = 3;//TxRegItemsMenuItemPageInfo.pageItems;
 }
 
+#define MSG_GO_BACK_TO_PREV 8
 static void TxRegItemsMenu_MoveCursor(s32 id, bool8 b, struct ListMenu *thisMenu)
 {
     if (b != TRUE)
@@ -394,11 +368,11 @@ static void TxRegItemsMenu_MoveCursor(s32 id, bool8 b, struct ListMenu *thisMenu
         if (id != -2)
             TxRegItemsMenu_PrintItemIcon(gSaveBlock1Ptr->registeredItems[id].itemId);
         else
-            TxRegItemsMenu_PrintItemIcon(ITEMPC_GO_BACK_TO_PREV);
+            TxRegItemsMenu_PrintItemIcon(MSG_GO_BACK_TO_PREV);
     }
 }
 
-static void TxRegItemsMenu_PrintFunc(u8 windowId, s32 id, u8 yOffset)
+static void TxRegItemsMenu_PrintFunc(u8 windowId, u32 id, u8 yOffset)
 {
     if (id != -2)
     {
@@ -426,8 +400,8 @@ static void TxRegItemsMenu_PrintItemIcon(u16 itemId)
         {
             *spriteIdLoc = spriteId;
             gSprites[spriteId].oam.priority = 0;
-            gSprites[spriteId].pos2.x = 32;
-            gSprites[spriteId].pos2.y = 132;
+            gSprites[spriteId].x2 = 32;
+            gSprites[spriteId].y2 = 132;
         }
     }
 }
