@@ -1029,16 +1029,16 @@ struct SaveBlock1
     // sizeof: 0x3???
 //registered items afterward
     /*0x3598*/ u8 unused_3598[0x180];
-    /*0x3718*/ u32 trainerHillTimes[4];
-    /*0x3728*/ struct RamScript ramScript;
-    /*0x3B14*/ struct RecordMixingGift recordMixingGift;
+    /*0x3718*/ //u32 trainerHillTimes[4];
+    /*0x3728*/ //struct RamScript ramScript;
+    /*0x3B14*/ //struct RecordMixingGift recordMixingGift;
     /*0x3B24*/ u8 seen2[NUM_DEX_FLAG_BYTES];
-    /*0x3B58*/ LilycoveLady lilycoveLady;
-    /*0x3B98*/ struct TrainerNameRecord trainerNameRecords[20];
-    /*0x3C88*/ u8 registeredTexts[UNION_ROOM_KB_ROW_COUNT][21];
+    /*0x3B58*/ //LilycoveLady lilycoveLady;
+    /*0x3B98*/ //struct TrainerNameRecord trainerNameRecords[20];
+    /*0x3C88*/ //u8 registeredTexts[UNION_ROOM_KB_ROW_COUNT][21];
     /*0x3D5A*/ u8 unused_3D5A[10];
-    /*0x3D64*/ struct SaveTrainerHill trainerHill;
-    /*0x3D70*/ struct WaldaPhrase waldaPhrase;
+    /*0x3D64*/ //struct SaveTrainerHill trainerHill;
+    /*0x3D70*/ //struct WaldaPhrase waldaPhrase;
     // sizeof: 0x3D88
                 u8 registeredItemLastSelected:4; //max 16 items
                 u8 registeredItemListCount:4;
