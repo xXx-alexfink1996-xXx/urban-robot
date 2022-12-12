@@ -13421,6 +13421,16 @@ static void Cmd_pickup(void)
                 heldItem = GetBattlePyramidPickupItemId();
                 SetMonData(&gPlayerParty[i], MON_DATA_HELD_ITEM, &heldItem);
             }
+			else if (species == SPECIES_SHUCKLE	//Shuckle Berry Juice
+				&& heldItem >= FIRST_BERRY_INDEX
+				&& heldItem <= LAST_BERRY_INDEX)
+			{
+				if (!(Random() % 16))
+				{
+					heldItem = ITEM_BERRY_JUICE;
+					SetMonData(&gPlayerParty[i], MON_DATA_HELD_ITEM, &heldItem);
+				}
+			}
             #if (defined ITEM_HONEY)
             else if (ability == ABILITY_HONEY_GATHER
                 && species != 0
@@ -13471,6 +13481,16 @@ static void Cmd_pickup(void)
                     }
                 }
             }
+			else if (species == SPECIES_SHUCKLE	//Shuckle Berry Juice
+				&& heldItem >= FIRST_BERRY_INDEX
+				&& heldItem <= LAST_BERRY_INDEX)
+			{
+				if (!(Random() % 16))
+				{
+					heldItem = ITEM_BERRY_JUICE;
+					SetMonData(&gPlayerParty[i], MON_DATA_HELD_ITEM, &heldItem);
+				}
+			}
             #if (defined ITEM_HONEY)
             else if (ability == ABILITY_HONEY_GATHER
                 && species != 0
@@ -14110,6 +14130,11 @@ static void Cmd_trysetcaughtmondexflags(void)
     {
         gBattlescriptCurrInstr = T1_READ_PTR(gBattlescriptCurrInstr + 1);
     }
+	else if (!FlagGet(FLAG_SYS_POKEDEX_GET))	//Won't update pokedex before getting it
+	{
+		HandleSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_SET_CAUGHT, personality);
+		gBattlescriptCurrInstr = T1_READ_PTR(gBattlescriptCurrInstr + 1);
+	}
     else
     {
         HandleSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_SET_CAUGHT, personality);
