@@ -1957,6 +1957,7 @@ static void Task_RemoveItemFromBag(u8 taskId)
     }
 }
 
+/* item menu prev
 static void ItemMenu_Register(u8 taskId)
 {
     s16 *data = gTasks[taskId].data;
@@ -1972,7 +1973,7 @@ static void ItemMenu_Register(u8 taskId)
     tListTaskId = ListMenuInit(&gMultiuseListMenuTemplate, *scrollPos, *cursorPos);
     ScheduleBgCopyTilemapToVram(0);
     ItemMenu_Cancel(taskId);
-}
+} */
 
 static void ItemMenu_Give(u8 taskId)
 {
@@ -2179,7 +2180,7 @@ bool8 UseRegisteredKeyItemOnField(u8 button)
     }
     ScriptContext_SetupScript(EventScript_SelectWithoutRegisteredItem);
     
-    ScriptContext1_SetupScript(EventScript_SelectWithoutRegisteredItem);
+    //>>>>>>>>ScriptContext1_SetupScript(EventScript_SelectWithoutRegisteredItem);
     return TRUE;
 }
 #undef tUsingRegisteredKeyItem

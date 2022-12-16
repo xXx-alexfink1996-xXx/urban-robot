@@ -16,6 +16,14 @@
 #include "constants/easy_chat.h"
 #include "constants/trainer_hill.h"
 
+//Saveblock Cleansing (partial)
+//free saveblock1 defines
+#define FREE_FIELD_3598
+//#define FREE_MYSTERY_EVENT_BUFFERS
+
+//free saveblock2 defines
+#define FREE_RECORD_MIXING_HALL_RECORDS
+
 // Prevent cross-jump optimization.
 #define BLOCK_CROSS_JUMP asm("");
 
@@ -503,8 +511,10 @@ struct SaveBlock2
     /*0x1EC*/ struct BerryCrush berryCrush;
     /*0x1FC*/ struct PokemonJumpRecords pokeJump;
     /*0x20C*/ struct BerryPickingResults berryPick;
+	#ifndef FREE_RECORD_MIXING_HALL_RECORDS
     /*0x21C*/ struct RankingHall1P hallRecords1P[HALL_FACILITIES_COUNT][FRONTIER_LVL_MODE_COUNT][HALL_RECORDS_COUNT]; // From record mixing.
     /*0x57C*/ struct RankingHall2P hallRecords2P[FRONTIER_LVL_MODE_COUNT][HALL_RECORDS_COUNT]; // From record mixing.
+	#endif
     /*0x624*/ u16 contestLinkResults[CONTEST_CATEGORIES_COUNT][CONTESTANT_COUNT];
     /*0x64C*/ struct BattleFrontier frontier;
 }; // sizeof=0xF2C
@@ -1014,31 +1024,37 @@ struct SaveBlock1
     /*0x31C7*/ struct ExternalEventFlags externalEventFlags;
     /*0x31DC*/ struct Roamer roamer;
     /*0x31F8*/ struct EnigmaBerry enigmaBerry;
+	#ifndef FREE_MYSTERY_EVENT_BUFFERS
     /*0x322C*/ struct MysteryGiftSave mysteryGift;
+	#endif
 //registerd items prev
     /*0x3???*/ u8 dexSeen[NUM_DEX_FLAG_BYTES];
     /*0x3???*/ u8 dexCaught[NUM_DEX_FLAG_BYTES];
     /*0x3???*/ u32 trainerHillTimes[NUM_TRAINER_HILL_MODES];
-    /*0x3???*/ struct RamScript ramScript;
-    /*0x3???*/ struct RecordMixingGift recordMixingGift;
-    /*0x3???*/ LilycoveLady lilycoveLady;
-    /*0x3???*/ struct TrainerNameRecord trainerNameRecords[20];
-    /*0x3???*/ u8 registeredTexts[UNION_ROOM_KB_ROW_COUNT][21];
+    /*0x3???*/ //struct RamScript ramScript;
+    /*0x3???*/ //struct RecordMixingGift recordMixingGift;
+    /*0x3???*/ //LilycoveLady lilycoveLady;
+    /*0x3???*/ //struct TrainerNameRecord trainerNameRecords[20];
+    /*0x3???*/ //u8 registeredTexts[UNION_ROOM_KB_ROW_COUNT][21];
     /*0x3???*/ struct TrainerHillSave trainerHill;
-    /*0x3???*/ struct WaldaPhrase waldaPhrase;
+    /*0x3???*/ //struct WaldaPhrase waldaPhrase;
     // sizeof: 0x3???
 //registered items afterward
+	#ifndef FREE_FIELD_3598
     /*0x3598*/ u8 unused_3598[0x180];
+	#endif
     /*0x3718*/ //u32 trainerHillTimes[4];
-    /*0x3728*/ //struct RamScript ramScript;
-    /*0x3B14*/ //struct RecordMixingGift recordMixingGift;
+	#ifndef FREE_MYSTERY_EVENT_BUFFERS
+    /*0x3728*/ struct RamScript ramScript;
+	#endif
+    /*0x3B14*/ struct RecordMixingGift recordMixingGift;
     /*0x3B24*/ u8 seen2[NUM_DEX_FLAG_BYTES];
-    /*0x3B58*/ //LilycoveLady lilycoveLady;
-    /*0x3B98*/ //struct TrainerNameRecord trainerNameRecords[20];
-    /*0x3C88*/ //u8 registeredTexts[UNION_ROOM_KB_ROW_COUNT][21];
+    /*0x3B58*/ LilycoveLady lilycoveLady;
+    /*0x3B98*/ struct TrainerNameRecord trainerNameRecords[20];
+    /*0x3C88*/ u8 registeredTexts[UNION_ROOM_KB_ROW_COUNT][21];
     /*0x3D5A*/ u8 unused_3D5A[10];
     /*0x3D64*/ //struct SaveTrainerHill trainerHill;
-    /*0x3D70*/ //struct WaldaPhrase waldaPhrase;
+    /*0x3D70*/ struct WaldaPhrase waldaPhrase;
     // sizeof: 0x3D88
                 u8 registeredItemLastSelected:4; //max 16 items
                 u8 registeredItemListCount:4;
