@@ -973,7 +973,7 @@ static void UpdateSnowflakeSprite(struct Sprite *sprite)
     else if (x > 242)
         sprite->x = -3 - (gSpriteCoordOffsetX + sprite->centerToCornerVecX);
 
-    y = (sprite->y + sprite->centerToCornerVecY + gSpriteCoordOffsetY) & 0xFF;
+    /*y = (sprite->y + sprite->centerToCornerVecY + gSpriteCoordOffsetY) & 0xFF;
     if (y > 163 && y < 171)
     {
         sprite->y = 250 - (gSpriteCoordOffsetY + sprite->centerToCornerVecY);
@@ -997,7 +997,7 @@ static void UpdateSnowflakeSprite(struct Sprite *sprite)
         sprite->y = 250;
         sprite->invisible = TRUE;
         sprite->callback = WaitSnowflakeSprite;
-    }
+    }														Snow Weather Fix*/
 }
 
 #undef tPosY
