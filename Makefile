@@ -25,6 +25,9 @@ AS := $(PREFIX)as
 
 LD := $(PREFIX)ld
 
+#poryscript
+SCRIPT := tools/poryscript/poryscript$(EXE)
+
 # note: the makefile must be set up so MODERNCC is never called
 # if MODERN=0
 MODERNCC := $(PREFIX)gcc
@@ -134,7 +137,7 @@ JSONPROC := tools/jsonproc/jsonproc$(EXE)
 
 PERL := perl
 
-TOOLDIRS := $(filter-out tools/agbcc tools/binutils,$(wildcard tools/*))
+TOOLDIRS := $(filter-out tools/agbcc tools/binutils tools/poryscript,$(wildcard tools/*))
 TOOLBASE = $(TOOLDIRS:tools/%=%)
 TOOLS = $(foreach tool,$(TOOLBASE),tools/$(tool)/$(tool)$(EXE))
 
@@ -243,6 +246,7 @@ mostlyclean: tidynonmodern tidymodern
 	rm -f $(DATA_ASM_SUBDIR)/maps/connections.inc $(DATA_ASM_SUBDIR)/maps/events.inc $(DATA_ASM_SUBDIR)/maps/groups.inc $(DATA_ASM_SUBDIR)/maps/headers.inc
 	find $(DATA_ASM_SUBDIR)/maps \( -iname 'connections.inc' -o -iname 'events.inc' -o -iname 'header.inc' \) -exec rm {} +
 	rm -f $(AUTO_GEN_TARGETS)
+	rm -f $(patsubst %.pory,%.inc,$(shell find data/ -type f -name '*.pory'))
 	@$(MAKE) clean -C libagbsyscall
 
 tidy: tidynonmodern tidymodern
@@ -269,6 +273,7 @@ include songs.mk
 %.png: ;
 %.pal: ;
 %.aif: ;
+%.pory: ;
 
 %.1bpp: %.png  ; $(GFX) $< $@
 %.4bpp: %.png  ; $(GFX) $< $@
@@ -281,6 +286,7 @@ include songs.mk
 $(CRY_SUBDIR)/uncomp_%.bin: $(CRY_SUBDIR)/uncomp_%.aif ; $(AIF) $< $@
 $(CRY_SUBDIR)/%.bin: $(CRY_SUBDIR)/%.aif ; $(AIF) $< $@ --compress
 sound/%.bin: sound/%.aif ; $(AIF) $< $@
+data/%.inc: data/%.pory; $(SCRIPT) -i $< -o $@ -fc tools/poryscript/font_config.json
 
 
 ifeq ($(MODERN),0)
