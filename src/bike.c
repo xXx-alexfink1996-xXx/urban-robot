@@ -1051,9 +1051,9 @@ void Bike_HandleBumpySlopeJump(void)
     }
 }
 
-bool32 IsRunningDisallowed(u8 metatile)
+bool32 IsRunningDisallowed(u8 metatile)	//Running Shoes Indoors
 {
-    if (!gMapHeader.allowRunning || IsRunningDisallowedByMetatile(metatile) == TRUE)
+    if (/*!gMapHeader.allowRunning || */IsRunningDisallowedByMetatile(metatile) == TRUE)
         return TRUE;
     else
         return FALSE;
